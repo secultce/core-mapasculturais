@@ -460,6 +460,71 @@ class Module extends \MapasCulturais\Module{
             $this->finish($new_registrations);
         });
 
+
+        // action para importar as inscrições da última fase concluida
+        $app->hook('GET(opportunity.importLastPhaseRegistrations2)', function() use($app) {
+            ini_set('max_execution_time', 0);
+
+            $target_opportunity = App::i()->repo('Opportunity')->find(2368);
+
+            // $target_opportunity = self::getRequestedOpportunity();
+
+            // $target_opportunity ->checkPermission('@control');
+
+            // if($target_opportunity->previousPhaseRegistrationsImported){
+            //     $this->errorJson(\MapasCulturais\i::__('As inscrições já foram importadas para esta fase'), 400);
+            // }
+
+            $previous_phase = self::getPreviousPhase($target_opportunity);
+
+            $registrations = array_filter($previous_phase->getSentRegistrations(), function($item){
+                if($item->status === Entities\Registration::STATUS_APPROVED){
+                    return $item;
+                }
+            });
+
+            if(count($registrations) < 1){
+                $this->errorJson(\MapasCulturais\i::__('Não há inscrições aprovadas fase anterior'), 400);
+            }
+
+            $new_registrations = [];
+
+            $connection = $app->em->getConnection();
+
+            $app->disableAccessControl();
+            foreach ($registrations as $r){
+
+                $statement = $connection->prepare("select count(id) FROM registration where number = '{$r->number}' AND opportunity_id = {$target_opportunity->id}");
+                $statement->execute();
+                $result = $statement->fetchAll();
+                if(isset($result[0]) && isset($result[0]['count']) && $result[0]['count'] == 0) {
+                    $reg = new Entities\Registration;
+                    $reg->owner = $r->owner;
+                    $reg->opportunity = $target_opportunity;
+                    $reg->status = Entities\Registration::STATUS_DRAFT;
+                    $reg->number = $r->number;
+    
+                    $reg->previousPhaseRegistrationId = $r->id;
+                    $reg->category = $r->category;
+                    $reg->save(true);
+    
+                    if(isset($this->data['sent'])){
+                        $reg->send();
+                    }
+    
+                    $r->nextPhaseRegistrationId = $reg->id;
+                    $r->save(true);
+    
+                    $new_registrations[] = $reg;
+                }
+            }
+
+            $app->enableAccessControl();
+
+            $this->finish($new_registrations);
+        });
+
+
         // desliga a edição do campo principal de data quando vendo uma fase
         $app->hook('view.partial(singles/opportunity-about--registration-dates).params', function(&$params){
             $opportunity = self::getRequestedOpportunity();
