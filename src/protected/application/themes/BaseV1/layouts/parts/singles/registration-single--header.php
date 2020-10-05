@@ -13,6 +13,10 @@
     <div class="registration-id alignleft">
         <?php echo $entity->number ?>
     </div>
+
+    &nbsp; &nbsp; &nbsp;
+    <?php $app->applyHookBoundTo($this, 'template.opportunity.single.header.registration-item', array("registrationId"=>$entity->id)); ?>
+
     <div class="alignright">
         <?php if($entity->canUser('changeStatus')): ?>
             <mc-select class="{{getStatusSlug(data.registration.status)}}" model="data.registration" data="data.registrationStatusesNames" getter="getRegistrationStatus" setter="setRegistrationStatus"></mc-select>
