@@ -464,16 +464,13 @@ class Module extends \MapasCulturais\Module{
         // action para importar as inscrições da última fase concluida
         $app->hook('GET(opportunity.importLastPhaseRegistrations2)', function() use($app) {
             ini_set('max_execution_time', 0);
+            ini_set('memory_limit', '-1');
 
             $target_opportunity = App::i()->repo('Opportunity')->find(2368);
 
             // $target_opportunity = self::getRequestedOpportunity();
 
             // $target_opportunity ->checkPermission('@control');
-
-            // if($target_opportunity->previousPhaseRegistrationsImported){
-            //     $this->errorJson(\MapasCulturais\i::__('As inscrições já foram importadas para esta fase'), 400);
-            // }
 
             $previous_phase = self::getPreviousPhase($target_opportunity);
 
@@ -497,7 +494,7 @@ class Module extends \MapasCulturais\Module{
                 $statement = $connection->prepare("select count(id) FROM registration where number = '{$r->number}' AND opportunity_id = {$target_opportunity->id}");
                 $statement->execute();
                 $result = $statement->fetchAll();
-                if(isset($result[0]) && isset($result[0]['count']) && $result[0]['count'] == 0) {
+                if($result[0]['count'] == 0) {
                     $reg = new Entities\Registration;
                     $reg->owner = $r->owner;
                     $reg->opportunity = $target_opportunity;
