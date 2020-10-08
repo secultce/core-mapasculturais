@@ -404,7 +404,7 @@ class Module extends \MapasCulturais\Module{
         });
 
         // action para importar as inscrições da última fase concluida
-        $app->hook('GET(opportunity.importLastPhaseRegistrations)', function() use($app) {
+        $app->hook('GET(opportunity.importLastPhaseRegistrations_OLD)', function() use($app) {
             ini_set('max_execution_time', 0);
             $target_opportunity = self::getRequestedOpportunity();
 
@@ -460,60 +460,66 @@ class Module extends \MapasCulturais\Module{
             $this->finish($new_registrations);
         });
 
-
+        // a função antiga esta aqui ACIMA, qualquer duvida, olhar ela...
         // action para importar as inscrições da última fase concluida
-        $app->hook('GET(opportunity.importLastPhaseRegistrations2)', function() use($app) {
+        $app->hook('GET(opportunity.importLastPhaseRegistrations)', function() use($app) {
             ini_set('max_execution_time', 0);
             ini_set('memory_limit', '-1');
 
-            $target_opportunity = App::i()->repo('Opportunity')->find(2368);
+            $target_opportunity = self::getRequestedOpportunity();
 
-            // $target_opportunity = self::getRequestedOpportunity();
-
-            // $target_opportunity ->checkPermission('@control');
+            $target_opportunity ->checkPermission('@control');
 
             $previous_phase = self::getPreviousPhase($target_opportunity);
 
-            $registrations = array_filter($previous_phase->getSentRegistrations(), function($item){
-                if($item->status === Entities\Registration::STATUS_APPROVED){
-                    return $item;
-                }
-            });
+            //pega as inscrições da fase anterior que estão aprovadas e nao foram importadas ainda
+            $em = $app->getEm();
+            $queryBuilder = $em->createQueryBuilder();
+            $queryBuilder->select('r')
+            ->from('\MapasCulturais\Entities\Registration', 'r')
+            ->where('r.status = 10')
+            ->innerJoin('\MapasCulturais\Entities\Opportunity', 'o')
+            ->andWhere('r.opportunity = o.id')
+            ->andWhere('o.id = ?1')
+            ->andWhere('r.number NOT IN (select r2.number from \MapasCulturais\Entities\Registration r2 WHERE r2.opportunity = ?2)')
+            ->setParameter(1, $previous_phase->id)
+            ->setParameter(2, $target_opportunity->id);
+ 
+            // get the Query from the QueryBuilder here ...
+            $query = $queryBuilder->getQuery();
 
-            if(count($registrations) < 1){
-                $this->errorJson(\MapasCulturais\i::__('Não há inscrições aprovadas fase anterior'), 400);
+            // ... then call getResult() on the Query (not on the QueryBuilder)
+            $registrations = $query->getResult(); 
+
+            if(count($registrations) == 0){
+                $this->errorJson(\MapasCulturais\i::__('Não existem inscrições aprovadas da fase anterior para importação'), 400);
             }
 
             $new_registrations = [];
 
-            $connection = $app->em->getConnection();
 
             $app->disableAccessControl();
             foreach ($registrations as $r){
+                
+                $reg = new Entities\Registration;
+                $reg->owner = $r->owner;
+                $reg->opportunity = $target_opportunity;
+                $reg->status = Entities\Registration::STATUS_DRAFT;
+                $reg->number = $r->number;
 
-                $statement = $connection->prepare("select count(id) FROM registration where number = '{$r->number}' AND opportunity_id = {$target_opportunity->id}");
-                $statement->execute();
-                $result = $statement->fetchAll();
-                if($result[0]['count'] == 0) {
-                    $reg = new Entities\Registration;
-                    $reg->owner = $r->owner;
-                    $reg->opportunity = $target_opportunity;
-                    $reg->status = Entities\Registration::STATUS_DRAFT;
-                    $reg->number = $r->number;
-    
-                    $reg->previousPhaseRegistrationId = $r->id;
-                    $reg->category = $r->category;
-                    $reg->save(true);
-    
-                    if(isset($this->data['sent'])){
-                        $reg->send();
-                    }
-    
-                    $r->nextPhaseRegistrationId = $reg->id;
-                    $r->save(true);
-    
-                    $new_registrations[] = $reg;
+                $reg->previousPhaseRegistrationId = $r->id;
+                $reg->category = $r->category;
+                $reg->save(true);
+
+                if(isset($this->data['sent'])){
+                    $reg->send();
                 }
+
+                $r->nextPhaseRegistrationId = $reg->id;
+                $r->save(true);
+
+                $new_registrations[] = $reg;
+                
             }
 
             $app->enableAccessControl();
