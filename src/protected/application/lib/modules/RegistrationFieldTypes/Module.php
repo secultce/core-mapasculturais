@@ -162,7 +162,7 @@ class Module extends \MapasCulturais\Module
     function getRegistrationFieldTypesDefinitions()
     {   
         $module = $this;
-
+        $app = App::i();
         $registration_field_types = [
             [
                 'slug' => 'textarea',
@@ -358,8 +358,11 @@ class Module extends \MapasCulturais\Module
                     $module->saveToEntity($registration->owner, $value, $registration, $metadata_definition);
                     return json_encode($value);
                 },
-                'unserialize' => function($value, Registration $registration = null, $metadata_definition = null) use ($module) {
-                    return $module->fetchFromEntity($registration->owner, $value, $registration, $metadata_definition);
+                'unserialize' => function($value, Registration $registration = null, $metadata_definition = null) use ($module, $app) {
+                    $app->disableAccessControl();
+                    $return = $module->fetchFromEntity($registration->owner, $value, $registration, $metadata_definition);
+                    $app->enableAccessControl();
+                    return $return;
                 }   
             ],
             [
@@ -376,11 +379,15 @@ class Module extends \MapasCulturais\Module
                     }
                     return json_encode($value);
                 },
-                'unserialize' => function($value, Registration $registration = null, $metadata_definition = null) use ($module) {
+                'unserialize' => function($value, Registration $registration = null, $metadata_definition = null) use ($module, $app) {
                     
                     $agent = $registration->getRelatedAgents('coletivo');
                     if($agent){
-                        return $module->fetchFromEntity($agent[0], $value, $registration, $metadata_definition);
+                        $app->disableAccessControl();
+                        $return = $module->fetchFromEntity($agent[0], $value, $registration, $metadata_definition);
+                        $app->enableAccessControl();
+                        return $return;
+
                     } else {
                         return json_decode($value);
                     }
@@ -401,10 +408,14 @@ class Module extends \MapasCulturais\Module
                     }
                     return json_encode($value);
                 },
-                'unserialize' => function($value, Registration $registration = null, Metadata $metadata_definition = null) use ($module) {
+                'unserialize' => function($value, Registration $registration = null, Metadata $metadata_definition = null) use ($module, $app) {
                     $space_relation = $registration->getSpaceRelation();
                     if($space_relation){
-                        return $module->fetchFromEntity($space_relation->space, $value, $registration, $metadata_definition);
+                        $app->disableAccessControl();
+                        $return = $module->fetchFromEntity($space_relation->space, $value, $registration, $metadata_definition);
+                        $app->enableAccessControl();
+                        return $return;
+
                     } else {
                         return json_decode($value);
                     }
