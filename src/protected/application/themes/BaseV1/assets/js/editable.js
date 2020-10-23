@@ -825,12 +825,19 @@ MapasCulturais.Editables = {
                 },
                 error : function(response){
                     $submitButton.data('clicked',false);
-                    if(response.status === 401)
+                    if (response.status === 401) {
                         MapasCulturais.auth.require(function(){
                             $submitButton.click();
                         });
-                    else{
-                        MapasCulturais.Messages.error(labels['unexpectedError']);
+                    } else {
+                        msgError = labels['unexpectedError'];
+
+                        responseJson = response.responseJSON;
+                        if(responseJson && responseJson.error) {
+                            msgError = responseJson.error;
+                        } 
+
+                        MapasCulturais.Messages.error(msgError);
                     }
                 }
             });
