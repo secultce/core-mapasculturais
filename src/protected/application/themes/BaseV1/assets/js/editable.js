@@ -832,10 +832,11 @@ MapasCulturais.Editables = {
                     else{
 
                         msgError = labels['unexpectedError'];
-
-                        responseJson = response.responseJSON;
-                        if(responseJson && responseJson.error) {
-                            msgError = responseJson.error;
+                       
+                        if(response.responseJSON) {
+                            if (response.responseJSON.error) {
+                                msgError = response.responseJSON.error;
+                            }                            
                         } 
 
                         MapasCulturais.Messages.error(msgError);
