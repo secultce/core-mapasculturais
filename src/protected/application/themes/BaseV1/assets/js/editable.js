@@ -830,7 +830,16 @@ MapasCulturais.Editables = {
                             $submitButton.click();
                         });
                     else{
-                        MapasCulturais.Messages.error(labels['unexpectedError']);
+
+                        msgError = labels['unexpectedError'];
+
+                        responseJson = response.responseJSON;
+                        if(responseJson && responseJson.error) {
+                            msgError = responseJson.error;
+                        } 
+
+                        MapasCulturais.Messages.error(msgError);
+
                     }
                 }
             });
