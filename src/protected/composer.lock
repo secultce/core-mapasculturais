@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7d6a0441aa93ed68c7bf9764e10275bb",
+    "content-hash": "8cd9fbcdef72c633b49c267c93251399",
     "packages": [
         {
             "name": "acelaya/doctrine-enum-type",
@@ -1391,6 +1391,7 @@
                 "reflection",
                 "static"
             ],
+            "abandoned": "roave/better-reflection",
             "time": "2020-03-27T11:06:43+00:00"
         },
         {
@@ -1436,6 +1437,48 @@
             "description": "A simple library to encode and decode JSON Web Tokens (JWT) in PHP. Should conform to the current spec.",
             "homepage": "https://github.com/firebase/php-jwt",
             "time": "2015-06-22T23:26:39+00:00"
+        },
+        {
+            "name": "hacklab/bank-account-validator",
+            "version": "1.1.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/hacklabr/validador-bancario.git",
+                "reference": "13d306ef65d4dd8425189a1949f18889ada6e206"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/hacklabr/validador-bancario/zipball/13d306ef65d4dd8425189a1949f18889ada6e206",
+                "reference": "13d306ef65d4dd8425189a1949f18889ada6e206",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.6"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "BankValidator\\": "src/"
+                },
+                "files": [
+                    "src/tools/InputProcessing.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0-only"
+            ],
+            "authors": [
+                {
+                    "name": "hacklab/",
+                    "email": "contato@hacklab.com.br"
+                }
+            ],
+            "description": "A simple brazilian account validator",
+            "time": "2020-12-15T21:32:46+00:00"
         },
         {
             "name": "michelf/php-markdown",

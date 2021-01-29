@@ -231,8 +231,9 @@ abstract class Entity implements \JsonSerializable{
     function setStatus(int $status){
         $app = App::i();
 
+        $hook_class_path = $this->getHookClassPath();
+        
         if($status != $this->status){
-            $hook_class_path = $this->getHookClassPath();
             
             switch($status){
                 case self::STATUS_ARCHIVED:
@@ -474,7 +475,6 @@ abstract class Entity implements \JsonSerializable{
      * <code>
      * /**
      *  * Example
-     *  {@*}
      *  array(
      *     'name' => array(
      *         'required' => true,
@@ -491,7 +491,7 @@ abstract class Entity implements \JsonSerializable{
      *
      * @return array the metadata of this entity properties.
      */
-    public static function getPropertiesMetadata(){
+    public static function getPropertiesMetadata($include_column_name = false){
         $__class = get_called_class();
         $class = $__class::getClassName();
 
@@ -508,8 +508,12 @@ abstract class Entity implements \JsonSerializable{
                 'required'  => !$value['nullable'],
                 'type' => $value['type'],
                 'length' => $value['length'],
-                'label' => $class::_getConfiguredPropertyLabel($key)
+                'label' => $class::_getConfiguredPropertyLabel($key),
             ];
+
+            if ($include_column_name && isset($value['columnName'])) {
+                $metadata['columnName'] = $value['columnName'];
+            }
 
             if($key[0] == '_'){
                 $prop = substr($key, 1);
@@ -637,7 +641,7 @@ abstract class Entity implements \JsonSerializable{
         return str_replace('MapasCulturais\Entities\\','',$this->getClassName());
     }
 
-    public function getEntityTypeLabel($plural = false) {}
+    public static function getEntityTypeLabel($plural = false) {}
 
     function getEntityState() {
         return App::i()->em->getUnitOfWork()->getEntityState($this);
@@ -681,7 +685,8 @@ abstract class Entity implements \JsonSerializable{
                 $is_new = true;
 
                 if($this->usesOriginSubsite() && $app->getCurrentSubsiteId()){
-                    $this->setSubsite($app->getCurrentSubsite());
+                    $subsite = $app->repo('Subsite')->find($app->getCurrentSubsiteId());
+                    $this->setSubsite($subsite);
                 }
 
             }else{
@@ -848,7 +853,6 @@ abstract class Entity implements \JsonSerializable{
      * <code>
      * /**
      *  * Example of the array of errors:
-     *  {@*}
      * array(
      *     'name' => [ 'The name is required' ],
      *     'email' => [ 'The first error message', 'The second error message' ]

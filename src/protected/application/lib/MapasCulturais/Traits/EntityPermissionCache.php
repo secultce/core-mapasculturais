@@ -97,6 +97,7 @@ trait EntityPermissionCache {
             }
         }
 
+
         $conn = $app->em->getConnection();
         $class_name = $this->getPCacheObjectType();
         $permissions = $this->getPermissionsList();
@@ -106,6 +107,8 @@ trait EntityPermissionCache {
         $isStatusNotDraft = ($this->status > Entity::STATUS_DRAFT);
 
         $already_created_users = [];
+        $users = array_unique($users);
+
         foreach ($users as $user) {
             if($user->is('guest')){
                 continue;
@@ -167,7 +170,7 @@ trait EntityPermissionCache {
        
     function enqueueToPCacheRecreation($skip_extra = false){
         $app = App::i();
-        if($app->isEntityEnqueuedToPCacheRecreation($this)){
+        if($app->isEntityEnqueuedToPCacheRecreation($this) || $this->__skipQueuingPCacheRecreation){
             return false;
         }
         
