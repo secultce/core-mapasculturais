@@ -49,6 +49,7 @@ $this->includeMapAssets();
         </div>
         <?php $this->applyTemplateHook('entity-status','after'); ?>
 
+        <?php $this->applyTemplateHook('header-content','before'); ?>
         <div class="header-content">
             <?php $this->applyTemplateHook('header-content','begin'); ?>
 
@@ -116,7 +117,7 @@ $this->includeMapAssets();
 
                     <?php if(isset($entity->dataDeNascimento) && $userCanView): ?>
                         <p class="privado"><span class="icon icon-private-info"></span><span class="label"><?php i::_e("Data de Nascimento/Fundação");?>:</span>
-                            <span class="js-editable" data-type="date" data-edit="dataDeNascimento" <?php echo $entity->dataDeNascimento ? "data-value='".$entity->dataDeNascimento->format('Y-m-d') . "'" : ''?> data-viewformat="dd/mm/yyyy" data-showbuttons="false" data-original-title="<?php i::esc_attr_e("Data de Nascimento/Fundação");?>" data-emptytext="<?php i::esc_attr_e("Insira a data de nascimento ou fundação do agente");?>">
+                            <span class="js-editable" data-type="date" data-edit="dataDeNascimento" <?php echo $entity->dataDeNascimento ? "data-value='". (is_string($entity->dataDeNascimento) ? $entity->dataDeNascimento : $entity->dataDeNascimento->format('Y-m-d')) . "'" : ''?> data-viewformat="dd/mm/yyyy" data-showbuttons="false" data-original-title="<?php i::esc_attr_e("Data de Nascimento/Fundação");?>" data-emptytext="<?php i::esc_attr_e("Insira a data de nascimento ou fundação do agente");?>">
                                 <?php $dtN = (new DateTime)->createFromFormat('Y-m-d', $entity->dataDeNascimento); echo $dtN ? $dtN->format('d/m/Y') : ''; ?>
                             </span>
                         </p>

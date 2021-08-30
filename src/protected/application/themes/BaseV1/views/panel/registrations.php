@@ -1,9 +1,10 @@
 <?php
 use MapasCulturais\Entities\Registration;
 $this->layout = 'panel';
-
+$has_drafts_registration = false;
 $drafts = $app->repo('Registration')->findByUser($app->user, Registration::STATUS_DRAFT);
 $sent = $app->repo('Registration')->findByUser($app->user, 'sent');
+$app->applyHookBoundTo($this, 'panel(registration.panel):begin', [&$sent,&$drafts]);
 ?>
 <div class="panel-list panel-main-content">
     <?php $this->applyTemplateHook('panel-header','before'); ?>
@@ -21,9 +22,12 @@ $sent = $app->repo('Registration')->findByUser($app->user, 'sent');
     </ul>
     <div id="ativos">
         <?php foreach($drafts as $registration): ?>
+        <?php if($registration->opportunity->isRegistrationOpen()){?>
+            <?php $has_drafts_registration = true; ?>
             <?php $this->part('panel-registration', array('registration' => $registration)); ?>
+        <?php } ?>
         <?php endforeach; ?>
-        <?php if(!$drafts): ?>
+        <?php if(!$drafts || !$has_drafts_registration): ?>
             <div class="alert info"><?php \MapasCulturais\i::_e("Você não possui nenhum rascunho de inscrição.");?></div>
         <?php endif; ?>
     </div>
