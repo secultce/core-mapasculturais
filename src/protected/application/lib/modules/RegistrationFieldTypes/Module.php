@@ -2,17 +2,19 @@
 
 namespace RegistrationFieldTypes;
 
+use DateTime;
 use MapasCulturais\App;
 use MapasCulturais\i;
-use \MapasCulturais\Entities\MetaList;
+use MapasCulturais\Entities\MetaList;
 use MapasCulturais\Entity;
 use MapasCulturais\Entities\Agent;
+use MapasCulturais\Entities\EntityRevision;
 use MapasCulturais\Entities\Space;
 use MapasCulturais\Entities\Registration;
 use MapasCulturais\Definitions\Metadata;
 use MapasCulturais\Definitions\RegistrationFieldType;
 use MapasCulturais\Entities\RegistrationFieldConfiguration;
-
+use MapasCulturais\Types\GeoPoint;
 
 class Module extends \MapasCulturais\Module
 {
@@ -33,7 +35,7 @@ class Module extends \MapasCulturais\Module
         $app->view->enqueueScript('app', 'rfc-cep', 'js/rfc/location.js');
         $app->view->enqueueScript('app', 'rfc-datepicker', 'js/rfc/datepicker.js', ['flatpickr']);
         $app->view->includeIbgeJS();
-        $app->view->enqueueScript('app', 'customizeble', 'js/customizable.js');
+        $app->view->enqueueScript('app', 'customizable', 'js/customizable.js');
         $app->view->enqueueScript('app', 'flatpickr', 'vendor/flatpickr.js');
         $app->view->enqueueScript('app', 'flatpickr-pt', 'vendor/flatpickr-pt.js', ['flatpickr']);
 
@@ -48,7 +50,7 @@ class Module extends \MapasCulturais\Module
 
         $this->register_agent_field();
         $this->register_space_field();
-
+        $this->applyLocationPatch();
         foreach ($this->getRegistrationFieldTypesDefinitions() as $definition) {
             $app->registerRegistrationFieldType(new RegistrationFieldType($definition));
         }
@@ -181,6 +183,15 @@ class Module extends \MapasCulturais\Module
                 'name' => \MapasCulturais\i::__('Campo de texto simples'),
                 'viewTemplate' => 'registration-field-types/text',
                 'configTemplate' => 'registration-field-types/text-config',
+            ],
+            [
+                'slug' => 'currency',
+                'name' => \MapasCulturais\i::__('Campo de moeda (R$)'),
+                'viewTemplate' => 'registration-field-types/currency',
+                'configTemplate' => 'registration-field-types/currency-config',
+                'validations' => [
+                    'v::brCurrency()' => \MapasCulturais\i::__('O valor não está no formato de moeda real (R$)')
+                ]
             ],
             [
                 'slug' => 'date',
@@ -464,17 +475,17 @@ class Module extends \MapasCulturais\Module
         return $registration_field_types;
     }
 
-    function saveToEntity (Entity $entity, $value, Registration $registration = null, Metadata $metadata_definition = null) {
-        
+    function saveToEntity(Entity $entity, $value, Registration $registration=null, Metadata $metadata_definition=null)
+    {
         if (isset($metadata_definition->config['registrationFieldConfiguration']->config['entityField'])) {
             $app = App::i();
             $entity_field = $metadata_definition->config['registrationFieldConfiguration']->config['entityField'];
             $metadata_definition->config['registrationFieldConfiguration']->id;
-            if($entity_field == '@location'){
-                if(isset($value['location'])){
-                    $entity->location = $value['location'];
+            if ($entity_field == "@location") {
+                if (!empty($value["location"]["latitude"]) && !empty($value["location"]["longitude"])) {
+                    // this order of coordinates is required by the EntityGeoLocation trait's setter
+                    $entity->location = [$value["location"]["longitude"], $value["location"]["latitude"]];
                 }
-
                 $entity->endereco = isset($value['endereco']) ? $value['endereco'] : '';
                 $entity->En_CEP = isset($value['En_CEP']) ? $value['En_CEP'] : '';
                 $entity->En_Nome_Logradouro = isset($value['En_Nome_Logradouro']) ? $value['En_Nome_Logradouro'] : '';
@@ -587,5 +598,202 @@ class Module extends \MapasCulturais\Module
         } else {
             return json_decode($value);
         }
+    }
+
+    static function locationPatchSave($agent, $sessionData, $location=null)
+    {
+        $app = App::i();
+        $app->disableAccessControl();
+        $agent->setMetadata("lastGeocodingAttempt", $sessionData["timestamp"]);
+        if ($location) {
+            $agent->location = $location;
+        }
+        if (!isset($agent->getMetadata()["endereco"])) {
+            $agent->setMetadata("endereco", $sessionData["address"]);
+        }
+        $agent->__skipQueuingPCacheRecreation = true;
+        $agent->save(true);
+        $app->enableAccessControl();
+        return;
+    }
+
+    private function applyLocationPatch()
+    {
+        $app = App::i();
+        $meta = "lastGeocodingAttempt";
+        $app->hook("entity(<<Agent|Space>>).save:requests",
+                   function (&$requests) use ($meta) {
+            /** @var \MapasCulturais\Entity $this */
+            if (($_SERVER["REQUEST_URI"] != "/agent/locationPatch/") &&
+                ($_SERVER["REQUEST_URI"] != "/space/locationPatch/") &&
+                $this->getMetadata($meta)) {
+                $this->setMetadata($meta, "19800101000000");
+            }
+            return;
+        });
+        if (!$app->config["app.enableLocationPatch"]) {
+            $app->hook("GET(<<agent|space>>.locationPatch)", function() {
+                /** @var \MapasCulturais\Controller $this */
+                $this->json([]);
+                return;
+            });
+            return;
+        }
+        $this->registerAgentMetadata($meta, [
+            "label" => i::__("Data e hora da última tentativa de geocoding"),
+            "type" => "string",
+            "private" => true,
+        ]);
+        $this->registerSpaceMetadata($meta, [
+            "label" => i::__("Data e hora da última tentativa de geocoding"),
+            "type" => "string",
+            "private" => true,
+        ]);
+        $app->hook("entity(EntityRevision).save:requests",
+                   function(&$requests) {
+            /** @var \MapasCulturais\Entities\EntityRevision $this */
+            if (!(($this->objectType == "MapasCulturais\Entities\Agent") &&
+                  ($_SERVER["REQUEST_URI"] == "/agent/locationPatch/")) &&
+                !(($this->objectType == "MapasCulturais\Entities\Space") &&
+                  ($_SERVER["REQUEST_URI"] == "/space/locationPatch/"))) {
+                return;
+            }
+            $this->action = EntityRevision::ACTION_AUTOUPDATED;
+            return;
+        });
+        $app->hook("GET(<<agent|space>>.locationPatch)", function() use ($app, $meta) {
+            /** @var \MapasCulturais\Controller $this */
+            $type = ["slug" => "agent", "class" => "Agent", "display" => "Agent"];
+            if ($this instanceof \MapasCulturais\Controllers\Space) {
+                $type = ["slug" => "space", "class" => "Space", "display" => "Space"];
+            }
+            $cutoff = $app->config["app.locationPatchCutoff"];
+            $conn = $app->em->getConnection();
+            $cache_id = "locationPatch.count";
+            if ($app->cache->contains($cache_id)) {
+                $count = $app->cache->fetch($cache_id);
+                if ($count > 1) {
+                    $app->cache->save($cache_id, ($count - 1), 300);
+                }
+            } else {
+                $count = (int) $conn->fetchColumn("
+                    SELECT count(a.id) FROM {$type["slug"]} AS a WHERE
+                        (a.location[0]=0 AND a.location[1]=0) AND EXISTS (
+                            SELECT id FROM {$type["slug"]}_meta WHERE
+                                key='En_Municipio' AND object_id=a.id
+                        ) AND EXISTS (
+                            SELECT id FROM {$type["slug"]}_meta WHERE
+                                key='En_Estado' AND object_id=a.id
+                        ) AND (
+                            (
+                                SELECT to_timestamp(
+                                    '$cutoff', 'YYYYMMDDHH24MISS'
+                                )
+                            ) > (
+                                SELECT to_timestamp(
+                                    (
+                                        SELECT COALESCE(
+                                            (
+                                                SELECT value FROM {$type["slug"]}_meta
+                                                WHERE
+                                                    object_id=a.id AND
+                                                    key='$meta'
+                                            ), '19800101000000'
+                                        )
+                                    ), 'YYYYMMDDHH24MISS'
+                                )
+                            )
+                        )");
+                if ($count > 100) {
+                    $app->cache->save($cache_id, $count, 600);
+                }
+            }
+            $offset = max(0, rand(0, ($count - 1)));
+            $entityid = $conn->fetchColumn("SELECT a.id FROM {$type["slug"]} AS a WHERE
+                        (a.location[0]=0 AND a.location[1]=0) AND EXISTS (
+                            SELECT id FROM {$type["slug"]}_meta WHERE
+                                key='En_Municipio' AND object_id=a.id
+                        ) AND EXISTS (
+                            SELECT id FROM {$type["slug"]}_meta WHERE
+                                key='En_Estado' AND object_id=a.id
+                        ) AND (
+                            (
+                                SELECT to_timestamp(
+                                    '$cutoff', 'YYYYMMDDHH24MISS'
+                                )
+                            ) > (
+                                SELECT to_timestamp(
+                                    (
+                                        SELECT COALESCE(
+                                            (
+                                                SELECT value FROM {$type["slug"]}_meta
+                                                WHERE
+                                                    object_id=a.id AND
+                                                    key='$meta'
+                                            ), '19800101000000'
+                                        )
+                                    ), 'YYYYMMDDHH24MISS'
+                                )
+                            )
+                        ) LIMIT 1 OFFSET {$offset}");
+
+            $entity = $app->repo($type["class"])->find($entityid);
+            if (!$entity) {
+                $this->json([]);
+                return;
+            }
+            $token = uniqid();
+            $meta = $entity->getMetadata();
+            $num = $meta["En_Num"] ?? "";
+            $nbhood = isset($meta["En_Bairro"]) ?
+                      "{$meta["En_Bairro"]}, " : "";
+            $street_addr = isset($meta["En_Nome_Logradouro"]) ? [
+                "address" => "{$meta["En_Nome_Logradouro"]} $num, $nbhood",
+                "query" => "$num {$meta["En_Nome_Logradouro"]}, $nbhood"
+            ] : ["address" => "", "query" => ""];
+            $_SESSION["{$type["slug"]}-locationPatch-$token"] = [
+                "id" => $entity->id,
+                "timestamp" => (new DateTime())->format("YmdHis"),
+                "address" => ("{$street_addr["address"]}" .
+                              "{$meta["En_Municipio"]}, {$meta["En_Estado"]}")
+            ];
+            $this->json([
+                "query" => ("{$street_addr["query"]}" .
+                            "{$meta["En_Municipio"]}, {$meta["En_Estado"]}"),
+                "fallback" => "{$meta["En_Municipio"]}, {$meta["En_Estado"]}",
+                "token" => $token
+            ]);
+            return;
+        });
+        $app->hook("POST(<<agent|space>>.locationPatch)", function() use ($app) {
+            /** @var \MapasCulturais\Controller $this */
+            $type = ["slug" => "agent", "class" => "Agent", "display" => "Agent"];
+            if ($this instanceof \MapasCulturais\Controllers\Space) {
+                $type = ["slug" => "space", "class" => "Space", "display" => "Space"];
+            }
+            $rToken = $this->postData["token"] ?? "";
+            $sessionData = $_SESSION["{$type["slug"]}-locationPatch-$rToken"] ?? null;
+            if (!$sessionData) {
+                $this->errorJson(["message" => "Invalid token."], 400);
+                return;
+            }
+            $entityID = $sessionData["id"] ?? 0;
+            $entity = $app->repo($type["class"])->find($entityID);
+            if (!$entity) {
+                unset($_SESSION["{$type["slug"]}-locationPatch-$rToken"]);
+                $this->errorJson(["message" => "{$type["display"]} not found."], 500);
+                return;
+            } else if (!isset($this->postData["latitude"]) ||
+                       !isset($this->postData["longitude"])) {
+                Module::locationPatchSave($entity, $sessionData);
+            } else {
+                $loc = new GeoPoint(floatVal($this->postData["longitude"]),
+                                    floatVal($this->postData["latitude"]));
+                Module::locationPatchSave($entity, $sessionData, $loc);
+            }
+            unset($_SESSION["{$type["slug"]}-locationPatch-$rToken"]);
+            return;
+        });
+        return;
     }
 }
