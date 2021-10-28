@@ -1454,9 +1454,10 @@ class Theme extends MapasCulturais\Theme {
         $this->enqueueScript('vendor', 'leaflet-draw', 'vendor/leaflet/lib/leaflet-plugins-updated-2014-07-25/Leaflet.draw-master/dist/leaflet.draw-src.js', array('leaflet'));
 
         // Google Maps API only needed in site/search and space, agent and event singles, or if the location patch is active
-        if(preg_match('#site|space|agent|event|subsite#',    $this->controller->id) && preg_match('#search|single|edit|create#', $this->controller->action) ||
-           App::i()->config['app.enableLocationPatch']) {
-            $this->enqueueScript('vendor', 'google-maps-api', 'https://maps.googleapis.com/maps/api/js?key=' . App::i()->config['app.googleApiKey']);
+        if ((preg_match("#site|space|agent|event|subsite#", $this->controller->id) &&
+             preg_match("#search|single|edit|create#", $this->controller->action)) ||
+            App::i()->config["app.enableLocationPatch"]) {
+            $this->includeGeocodingAssets();
         }
 
         //Leaflet Plugins
@@ -1617,7 +1618,27 @@ class Theme extends MapasCulturais\Theme {
         ]);
     }
 
+    function includeGeocodingAssets()
+    {
+        $this->enqueueScript("vendor", "google-maps-api",
+                             ("https://maps.googleapis.com/maps/api/js?key=" .
+                              App::i()->config["app.googleApiKey"]));
+        return;
+    }
+
     function includeSearchAssets() {
+
+        $this->jsObject['ngSearchAppDependencies'] = [
+            'ng-mapasculturais',
+            'rison',
+            'infinite-scroll',
+            'ui.date',
+            'search.service.find',
+            'search.service.findOne',
+            'search.controller.map',
+            'search.controller.spatial',
+            'mc.module.notifications'
+        ];
 
         $this->enqueueScript('app', 'search.service.find', 'js/ng.search.service.find.js', array('ng-mapasculturais', 'search.controller.spatial'));
         $this->enqueueScript('app', 'search.service.findOne', 'js/ng.search.service.findOne.js', array('ng-mapasculturais', 'search.controller.spatial'));
@@ -1778,6 +1799,8 @@ class Theme extends MapasCulturais\Theme {
             'Todas opções' => i::__('Todas opções'),
         ]);
 
+        $this->jsObject['registrationAutosaveTimeout'] = $app->config['registration.autosaveTimeout'];
+        
         $this->enqueueScript('app', 'entity.module.opportunity', 'js/ng.entity.module.opportunity.js', array('ng-mapasculturais'));
         $this->localizeScript('moduleOpportunity', [
             'allCategories' => i::__('Todas as categorias'),
@@ -2445,7 +2468,7 @@ class Theme extends MapasCulturais\Theme {
         $this->jsObject['entity']['canUserSend'] = $entity->canUser('send');
         $this->jsObject['entity']['canUserViewUserEvaluations'] = $entity->canUser('viewUserEvaluations');
 
-        $this->jsObject['registration'] = $entity;
+        $this->jsObject['registration'] = (object) $entity->jsonSerialize();
 
         if($entity->opportunity->canUser('viewEvaluations')){
             $this->jsObject['evaluation'] = $this->getCurrentRegistrationEvaluation($entity);

@@ -44,8 +44,7 @@ class Module extends \MapasCulturais\Module
 
          //Caso exista prestação de contas, impede que seja possível deletar fases anteriores.
          $app->hook("can(Opportunity.remove)", function($user, &$result){
-            $entity = $this->controller->requestedEntity;
-            if($entity->parent && $entity->parent->accountabilityPhase){
+            if($this->parent->accountabilityPhase ?? false){
                 $result = false;
             }
         });
@@ -802,7 +801,7 @@ class Module extends \MapasCulturais\Module
             'serialize' => function (Opportunity $opportunity) {
                 return $opportunity->id;
             },
-            'unserialize' => function ($opportunity_id, $opportunity) use($opportunity_repository, $app) {
+            'unserialize' => function ($opportunity_id) use($opportunity_repository, $app) {
 
                 if ($opportunity_id) {
                     return $opportunity_repository->find($opportunity_id);
@@ -872,7 +871,7 @@ class Module extends \MapasCulturais\Module
             'serialize' => function (Opportunity $opportunity) {
                 return $opportunity->id;
             },
-            'unserialize' => function ($opportunity_id, $opportunity) use($opportunity_repository) {
+            'unserialize' => function ($opportunity_id) use($opportunity_repository) {
                 if ($opportunity_id) {
                     return $opportunity_repository->find($opportunity_id);
                 } else {
