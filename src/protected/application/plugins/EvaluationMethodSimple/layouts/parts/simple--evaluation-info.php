@@ -1,1 +1,0 @@
-<p><?php MapasCulturais\i::_e('Selecione o status desta inscrição.') ?></p>
