@@ -1,0 +1,26 @@
+language: php
+
+php:
+  - 7.2
+
+matrix:
+  fast_finish: true
+  allow_failures:
+    - php: 7.3
+
+addons:
+  postgresql: 9.6
+  apt:
+    packages:
+    - postgresql-9.6-postgis-2.3
+    
+install:
+  - composer self-update && composer --version
+  - pushd src/protected; composer install --prefer-dist --no-dev; popd
+
+before_script:
+  - gem install sass
+  - npm install -g uglify-js uglifycss autoprefixer
+
+script:
+  - ./scripts/run-tests.sh
