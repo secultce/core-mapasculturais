@@ -389,7 +389,9 @@ class ApiQuery {
         
         if(strpos($class, 'MapasCulturais\Entities\Opportunity') === 0 && $this->parentQuery){
             $parent_class = $this->parentQuery->entityClassName;
-            $class = $parent_class::getOpportunityClassName();
+            if($parent_class != 'MapasCulturais\Entities\Opportunity') {
+                $class = $parent_class::getOpportunityClassName();
+            }
         }
         
         $this->entityProperties = array_keys($this->em->getClassMetadata($class)->fieldMappings);
@@ -478,6 +480,14 @@ class ApiQuery {
         
     }
 
+    public function findIds() {
+        $result = $this->getFindResult('e.id');
+
+        return array_map(function ($row) {
+            return $row['id'];
+        }, $result);
+    }
+
     public function findOne(){
         return $this->getFindOneResult();
     }
@@ -514,8 +524,8 @@ class ApiQuery {
         return $this->getFindResult();
     }
     
-    public function getFindResult() {
-        $dql = $this->getFindDQL();
+    public function getFindResult(string $select = null) {
+        $dql = $this->getFindDQL($select);
 
         $q = $this->em->createQuery($dql);
 
@@ -582,8 +592,8 @@ class ApiQuery {
         return $params;
     }
 
-    public function getFindDQL() {
-        $select = $this->generateSelect();
+    public function getFindDQL(string $select = null) {
+        $select = $select ?: $this->generateSelect();
         $where = $this->generateWhere();
         $joins = $this->generateJoins();
         $order = $this->generateOrder();
