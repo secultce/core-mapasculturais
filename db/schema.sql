@@ -17,6 +17,9 @@ SET row_security = off;
 -- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: -
 --
 
+CREATE USER postgres WITH PASSWORD 'postgres';
+
+
 CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 
 
