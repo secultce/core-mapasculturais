@@ -1,4 +1,5 @@
 <?php
+
 namespace MapasCulturais;
 
 use Doctrine\ORM\Tools\Setup;
@@ -50,7 +51,8 @@ use MapasCulturais\Entities\User;
  *
  * @method \MapasCulturais\App i() Returns the application object
  */
-class App extends \Slim\Slim{
+class App extends \Slim\Slim
+{
     use \MapasCulturais\Traits\MagicGetter,
         \MapasCulturais\Traits\MagicSetter,
         \MapasCulturais\Traits\Singleton;
@@ -120,28 +122,28 @@ class App extends \Slim\Slim{
      * @var type
      */
     protected $_register = [
-            'controllers' => [],
-            'auth_providers' => [],
-            'controllers-by-class' => [],
-            'controllers_default_actions' => [],
-            'controllers_view_dirs' => [],
-            'entity_type_groups' => [],
-            'entity_types' => [],
-            'entity_metadata_definitions' => [],
-            'file_groups' => [],
-            'metalist_groups' => [],
-            'taxonomies' => [
-                'by-id' => [],
-                'by-slug' => [],
-                'by-entity' => [],
-            ],
-            'api_outputs' => [],
-            'image_transformations' => [],
-            'registration_agent_relations' => [],
-            'registration_fields' => [],
-            'evaluation_method' => [],
-            'roles' => []
-        ];
+        'controllers' => [],
+        'auth_providers' => [],
+        'controllers-by-class' => [],
+        'controllers_default_actions' => [],
+        'controllers_view_dirs' => [],
+        'entity_type_groups' => [],
+        'entity_types' => [],
+        'entity_metadata_definitions' => [],
+        'file_groups' => [],
+        'metalist_groups' => [],
+        'taxonomies' => [
+            'by-id' => [],
+            'by-slug' => [],
+            'by-entity' => [],
+        ],
+        'api_outputs' => [],
+        'image_transformations' => [],
+        'registration_agent_relations' => [],
+        'registration_fields' => [],
+        'evaluation_method' => [],
+        'roles' => []
+    ];
 
     protected $_registerLocked = true;
 
@@ -178,33 +180,34 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\App
      */
-    public function init($config = []){
-        if($this->_initiated)
+    public function init($config = [])
+    {
+        if ($this->_initiated)
             return $this;
 
         $this->_initiated = true;
 
-        if(empty($config['base.url'])){
-            $config['base.url'] = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] ? 'https://' : 'http://') . 
-                                  (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost') . '/';
+        if (empty($config['base.url'])) {
+            $config['base.url'] = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] ? 'https://' : 'http://') .
+                (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost') . '/';
         }
 
-        if(empty($config['base.assetUrl'])){
+        if (empty($config['base.assetUrl'])) {
             $config['base.assetUrl'] = $config['base.url'] . 'assets/';
         }
 
-        if($config['slim.debug'])
+        if ($config['slim.debug'])
             error_reporting(E_ALL ^ E_STRICT);
 
 
         session_save_path(SESSIONS_SAVE_PATH);
-        
+
         session_start();
 
-        if($config['app.offline']){
+        if ($config['app.offline']) {
             $bypass_callable = $config['app.offlineBypassFunction'];
-            
-            if (php_sapi_name()!=="cli" && (!is_callable($bypass_callable) || !$bypass_callable())) {
+
+            if (php_sapi_name() !== "cli" && (!is_callable($bypass_callable) || !$bypass_callable())) {
                 http_response_code(307);
                 header('Location: ' . $config['app.offlineUrl']);
                 die;
@@ -212,23 +215,22 @@ class App extends \Slim\Slim{
         }
 
         // =============== CACHE =============== //
-        if(key_exists('app.cache', $config) && is_object($config['app.cache'])  && is_subclass_of($config['app.cache'], '\Doctrine\Common\Cache\CacheProvider')){
+        if (key_exists('app.cache', $config) && is_object($config['app.cache'])  && is_subclass_of($config['app.cache'], '\Doctrine\Common\Cache\CacheProvider')) {
             $this->_cache = $config['app.cache'];
             $this->_mscache = clone $this->_cache;
-
-        }else{
-            $this->_cache = new \Doctrine\Common\Cache\ArrayCache ();
-            $this->_mscache = new \Doctrine\Common\Cache\ArrayCache ();
+        } else {
+            $this->_cache = new \Doctrine\Common\Cache\ArrayCache();
+            $this->_mscache = new \Doctrine\Common\Cache\ArrayCache();
         }
 
-        $this->_rcache = new \Doctrine\Common\Cache\ArrayCache ();
+        $this->_rcache = new \Doctrine\Common\Cache\ArrayCache();
 
 
         $this->_mscache->setNamespace(__DIR__);
 
         // list of modules
         $available_modules = [];
-        if($handle = opendir(MODULES_PATH)){
+        if ($handle = opendir(MODULES_PATH)) {
             while (false !== ($file = readdir($handle))) {
                 $dir = MODULES_PATH . $file . '/';
                 if ($file != "." && $file != ".." && is_dir($dir)) {
@@ -241,22 +243,22 @@ class App extends \Slim\Slim{
 
         // list of themes
         foreach (scandir(THEMES_PATH) as $ff) {
-            if ($ff != '.' && $ff != '..' ) {
+            if ($ff != '.' && $ff != '..') {
                 $theme_folder = THEMES_PATH . $ff;
                 if (is_dir($theme_folder) && file_exists($theme_folder . '/Theme.php')) {
                     $content = file_get_contents($theme_folder . '/Theme.php');
-                    if(preg_match('#namespace +([a-z0-9\\\]+) *;#i', $content, $matches)) {
+                    if (preg_match('#namespace +([a-z0-9\\\]+) *;#i', $content, $matches)) {
                         $namespace = $matches[1];
-                        if ( !array_key_exists($namespace, $config['namespaces']) )
+                        if (!array_key_exists($namespace, $config['namespaces']))
                             $config['namespaces'][$namespace] = $theme_folder;
                     }
                 }
             }
         }
 
-        spl_autoload_register(function($class) use ($config, $available_modules){
+        spl_autoload_register(function ($class) use ($config, $available_modules) {
             $cache_id = "AUTOLOAD_CLASS:$class";
-            if($config['app.useRegisteredAutoloadCache'] && $this->_mscache->contains($cache_id)){
+            if ($config['app.useRegisteredAutoloadCache'] && $this->_mscache->contains($cache_id)) {
                 $path = $this->_mscache->fetch($cache_id);
                 require_once $path;
                 return true;
@@ -266,20 +268,20 @@ class App extends \Slim\Slim{
 
             $namespaces['MapasCulturais\\DoctrineProxies'] = DOCTRINE_PROXIES_PATH;
 
-            foreach($config['plugins'] as $plugin){
+            foreach ($config['plugins'] as $plugin) {
                 $dir = isset($plugin['path']) ? $plugin['path'] : PLUGINS_PATH . $plugin['namespace'];
-                if(!isset($namespaces[$plugin['namespace']])){
+                if (!isset($namespaces[$plugin['namespace']])) {
                     $namespaces[$plugin['namespace']] = $dir;
                 }
             }
 
-            foreach($namespaces as $namespace => $base_dir){
-                if(strpos($class, $namespace) === 0){
-                    $path = str_replace('\\', '/', str_replace($namespace, $base_dir, $class) . '.php' );
+            foreach ($namespaces as $namespace => $base_dir) {
+                if (strpos($class, $namespace) === 0) {
+                    $path = str_replace('\\', '/', str_replace($namespace, $base_dir, $class) . '.php');
 
-                    if(\file_exists($path)){
+                    if (\file_exists($path)) {
                         require_once $path;
-                        if($config['app.useRegisteredAutoloadCache'])
+                        if ($config['app.useRegisteredAutoloadCache'])
                             $this->_mscache->save($cache_id, $path, $config['app.registeredAutoloadCache.lifetime']);
                         return true;
                     }
@@ -288,7 +290,7 @@ class App extends \Slim\Slim{
         });
 
         // extende a config with theme config files
-        
+
         $theme_class = "\\" . $config['themes.active'] . '\Theme';
         $theme_path = $theme_class::getThemeFolder() . '/';
 
@@ -307,12 +309,12 @@ class App extends \Slim\Slim{
 
         $this->_config = $config;
 
-        $this->_config['path.layouts'] = APPLICATION_PATH.'themes/active/layouts/';
-        $this->_config['path.templates'] = APPLICATION_PATH.'themes/active/views/';
-        $this->_config['path.metadata_inputs'] = APPLICATION_PATH.'themes/active/metadata-inputs/';
+        $this->_config['path.layouts'] = APPLICATION_PATH . 'themes/active/layouts/';
+        $this->_config['path.templates'] = APPLICATION_PATH . 'themes/active/views/';
+        $this->_config['path.metadata_inputs'] = APPLICATION_PATH . 'themes/active/metadata-inputs/';
 
-        if(!key_exists('app.sanitize_filename_function', $this->_config))
-                $this->_config['app.sanitize_filename_function'] = null;
+        if (!key_exists('app.sanitize_filename_function', $this->_config))
+            $this->_config['app.sanitize_filename_function'] = null;
 
         // ========== BOOTSTRAPING DOCTRINE ========== //
         // annotation driver
@@ -370,7 +372,7 @@ class App extends \Slim\Slim{
 
 
         $doctrine_config->setAutoGenerateProxyClasses(\Doctrine\Common\Proxy\AbstractProxyFactory::AUTOGENERATE_FILE_NOT_EXISTS);
-        
+
         // obtaining the entity manager
         $this->_em = EntityManager::create($config['doctrine.database'], $doctrine_config);
 
@@ -394,10 +396,10 @@ class App extends \Slim\Slim{
         $platform->registerDoctrineTypeMapping('geometry', 'geometry');
         $platform->registerDoctrineTypeMapping('object_type', 'object_type');
         $platform->registerDoctrineTypeMapping('permission_action', 'permission_action');
-        
+
 
         // QUERY LOGGER
-        if(@$config['app.log.query']){
+        if (@$config['app.log.query']) {
             if (isset($config['app.queryLogger']) && is_object($config['app.queryLogger'])) {
                 $query_logger = $config['app.queryLogger'];
             } elseif (isset($config['app.queryLogger']) && is_string($config['app.queryLogger']) && class_exists($config['app.queryLogger'])) {
@@ -415,24 +417,25 @@ class App extends \Slim\Slim{
 
         $domain = @$_SERVER['HTTP_HOST'];
 
-        if(($pos = strpos($domain, ':')) !== false){
+        if (($pos = strpos($domain, ':')) !== false) {
             $domain = substr($domain, 0, $pos);
         }
 
         // para permitir o db update rodar para criar a tabela do subsite
-        if(($pos = strpos($domain, ':')) !== false){
+        if (($pos = strpos($domain, ':')) !== false) {
             $domain = substr($domain, 0, $pos);
         }
-        try{
+        try {
             $this->_subsite = $this->repo('Subsite')->findOneBy(['url' => $domain, 'status' => 1]);
 
-            if(!$this->_subsite){
+            if (!$this->_subsite) {
                 $this->_subsite = $this->repo('Subsite')->findOneBy(['aliasUrl' => $domain, 'status' => 1]);
             }
-        } catch ( \Exception $e) { }
+        } catch (\Exception $e) {
+        }
 
 
-        if($this->_subsite){
+        if ($this->_subsite) {
             $this->_cache->setNamespace($config['app.cache.namespace'] . ':' . $this->_subsite->id);
 
             $theme_class = $this->_subsite->namespace . "\Theme";
@@ -454,12 +457,12 @@ class App extends \Slim\Slim{
             'mode' => $this->_config['app.mode']
         ]);
 
-        foreach($config['plugins'] as $slug => $plugin){
+        foreach ($config['plugins'] as $slug => $plugin) {
             $_namespace = $plugin['namespace'];
             $_class = isset($plugin['class']) ? $plugin['class'] : 'Plugin';
             $plugin_class_name = "$_namespace\\$_class";
 
-            if(class_exists($plugin_class_name)){
+            if (class_exists($plugin_class_name)) {
                 $plugin_config = isset($plugin['config']) && is_array($plugin['config']) ? $plugin['config'] : [];
 
                 $slug = is_numeric($slug) ? $_namespace : $slug;
@@ -471,11 +474,11 @@ class App extends \Slim\Slim{
         $config = $this->_config;
 
         $this->applyHookBoundTo($this, 'app.modules.init:before', [&$available_modules]);
-        foreach ($available_modules as $module){
+        foreach ($available_modules as $module) {
             $module_class_name = "$module\Module";
-            $module_config = isset($config["module.$module"]) ? 
-            $config["module.$module"] : [];
-            
+            $module_config = isset($config["module.$module"]) ?
+                $config["module.$module"] : [];
+
             $this->applyHookBoundTo($this, "app.module({$module}).init:before", [&$module_config]);
             $this->_modules[$module] = new $module_class_name($module_config);
             $this->applyHookBoundTo($this, "app.module({$module}).init:after");
@@ -486,14 +489,14 @@ class App extends \Slim\Slim{
         // ===================================== //
 
         // custom log writer
-        if(isset($config['slim.log.writer']) && is_object($config['slim.log.writer']) && method_exists($config['slim.log.writer'], 'write')){
+        if (isset($config['slim.log.writer']) && is_object($config['slim.log.writer']) && method_exists($config['slim.log.writer'], 'write')) {
             $log = $this->getLog();
             $log->setWriter($config['slim.log.writer']);
         }
 
 
         // creates runtime cache component
-        $this->_rcache = new \Doctrine\Common\Cache\ArrayCache ();
+        $this->_rcache = new \Doctrine\Common\Cache\ArrayCache();
 
         // ===================================== //
 
@@ -501,10 +504,10 @@ class App extends \Slim\Slim{
 
 
         // ============= STORAGE =============== //
-        if(key_exists('storage.driver', $config) && class_exists($config['storage.driver']) && is_subclass_of($config['storage.driver'], '\MapasCulturais\Storage')){
+        if (key_exists('storage.driver', $config) && class_exists($config['storage.driver']) && is_subclass_of($config['storage.driver'], '\MapasCulturais\Storage')) {
             $storage_class = $config['storage.driver'];
             $this->_storage = key_exists('storage.config', $config) ? $storage_class::i($config['storage.config']) : $storage_class::i();
-        }else{
+        } else {
             $this->_storage = \MapasCulturais\Storage\FileSystem::i();
         }
         // ===================================== //
@@ -512,8 +515,8 @@ class App extends \Slim\Slim{
 
 
         // add middlewares
-        if(is_array($config['slim.middlewares']))
-            foreach($config['slim.middlewares'] as $middleware)
+        if (is_array($config['slim.middlewares']))
+            foreach ($config['slim.middlewares'] as $middleware)
                 $this->add($middleware);
 
         // instantiate the route manager
@@ -526,9 +529,9 @@ class App extends \Slim\Slim{
 
         // =============== AUTH ============== //
 
-        if($token = $this->request()->headers->get('authorization')){
+        if ($token = $this->request()->headers->get('authorization')) {
             $this->_auth = new AuthProviders\JWT(['token' => $token]);
-        }else{
+        } else {
             $auth_class_name = strpos($config['auth.provider'], '\\') !== false ? $config['auth.provider'] : 'MapasCulturais\AuthProviders\\' . $config['auth.provider'];
             $this->_auth = new $auth_class_name($config['auth.config']);
             $this->_auth->setCookies();
@@ -538,45 +541,48 @@ class App extends \Slim\Slim{
         $this->view->init();
 
         // ===================================== //
-        
+
         // run plugins
-        if(isset($config['plugins.enabled']) && is_array($config['plugins.enabled'])){
-            foreach($config['plugins.enabled'] as $plugin){
-                if(file_exists(PLUGINS_PATH.$plugin.'.php')){
-                    include PLUGINS_PATH.$plugin.'.php';
+        if (isset($config['plugins.enabled']) && is_array($config['plugins.enabled'])) {
+            foreach ($config['plugins.enabled'] as $plugin) {
+                if (file_exists(PLUGINS_PATH . $plugin . '.php')) {
+                    include PLUGINS_PATH . $plugin . '.php';
                 }
             }
         }
         // ===================================== //
 
 
-        if($this->_subsite){
+        if ($this->_subsite) {
             // apply subsite filters
             $this->_subsite->applyApiFilters();
 
             $this->_subsite->applyConfigurations($this->_config);
         }
 
-        if(defined('DB_UPDATES_FILE') && file_exists(DB_UPDATES_FILE))
+        if (defined('DB_UPDATES_FILE') && file_exists(DB_UPDATES_FILE))
             $this->_dbUpdates();
 
 
         return $this;
     }
 
-    public function run() {
+    public function run()
+    {
         $this->applyHookBoundTo($this, 'mapasculturais.run:before');
         parent::run();
         $this->persistPCachePendingQueue();
         $this->applyHookBoundTo($this, 'mapasculturais.run:after');
     }
 
-    public function getVersion(){
+    public function getVersion()
+    {
         $version = trim($this->getVersionFile());
         return sprintf('v%s', $version);
     }
 
-    private function getVersionFile() {
+    private function getVersionFile()
+    {
         $version = \MapasCulturais\i::_e("versão indefinida");
         $path = getcwd() . "/../version.txt";
         if (file_exists($path) && $versionFile = fopen($path, "r")) {
@@ -589,7 +595,8 @@ class App extends \Slim\Slim{
     /**
      * http://stackoverflow.com/questions/1846202/php-how-to-generate-a-random-unique-alphanumeric-string/13733588#13733588
      */
-    protected static function crypto_rand_secure($min, $max) {
+    protected static function crypto_rand_secure($min, $max)
+    {
         $range = $max - $min;
         if ($range < 1)
             return $min; // not so random...
@@ -604,87 +611,96 @@ class App extends \Slim\Slim{
         return $min + $rnd;
     }
 
-    static function getToken($length) {
+    static function getToken($length)
+    {
         $token = "";
         $codeAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        $codeAlphabet.= "abcdefghijklmnopqrstuvwxyz";
-        $codeAlphabet.= "0123456789";
+        $codeAlphabet .= "abcdefghijklmnopqrstuvwxyz";
+        $codeAlphabet .= "0123456789";
         $max = strlen($codeAlphabet) - 1;
         for ($i = 0; $i < $length; $i++) {
             $token .= $codeAlphabet[self::crypto_rand_secure(0, $max)];
         }
-        
+
         return $token;
     }
 
-    function isEnabled($entity){
+    function isEnabled($entity)
+    {
         return $this->_config['app.enabled.' . $entity];
     }
 
-    function enableAccessControl(){
+    function enableAccessControl()
+    {
         if ($this->_disableAccessControlCount > 0) {
             $this->_disableAccessControlCount--;
         }
     }
 
-    function disableAccessControl(){
+    function disableAccessControl()
+    {
         $this->_disableAccessControlCount++;
     }
 
-    function isAccessControlEnabled(){
+    function isAccessControlEnabled()
+    {
         return $this->_disableAccessControlCount == 0;
     }
 
-    function enableWorkflow(){
+    function enableWorkflow()
+    {
         $this->_workflowEnabled = true;
     }
 
-    function disableWorkflow(){
+    function disableWorkflow()
+    {
         $this->_workflowEnabled = false;
     }
 
-    function isWorkflowEnabled(){
+    function isWorkflowEnabled()
+    {
         return $this->_workflowEnabled;
     }
 
-    function _dbUpdates(){
+    function _dbUpdates()
+    {
         $this->disableAccessControl();
 
         $executed_updates = [];
 
-        foreach($this->repo('DbUpdate')->findAll() as $up)
+        foreach ($this->repo('DbUpdate')->findAll() as $up)
             $executed_updates[] = $up->name;
 
         $updates = include DB_UPDATES_FILE;
 
-        foreach($this->view->path as $path){
+        foreach ($this->view->path as $path) {
             $db_update_file = $path . 'db-updates.php';
-            if(file_exists($db_update_file)){
+            if (file_exists($db_update_file)) {
                 $updates += include $db_update_file;
             }
         }
 
         $new_updates = false;
 
-        foreach($updates as $name => $function){
-            if(!in_array($name, $executed_updates)){
+        foreach ($updates as $name => $function) {
+            if (!in_array($name, $executed_updates)) {
                 $new_updates = true;
                 echo "\nApplying db update \"$name\":";
                 echo "\n-------------------------------------------------------------------------------------------------------\n";
-                try{
-                    if($function() !== false){
+                try {
+                    if ($function() !== false) {
                         $up = new Entities\DbUpdate();
                         $up->name = $name;
                         $up->save();
                     }
-                }catch(\Exception $e){
+                } catch (\Exception $e) {
                     echo "\nERROR " . $e . "\n";
                 }
                 echo "\n-------------------------------------------------------------------------------------------------------\n\n";
             }
         }
 
-        if($new_updates){
+        if ($new_updates) {
             $this->_em->flush();
             $this->cache->deleteAll();
         }
@@ -694,69 +710,70 @@ class App extends \Slim\Slim{
 
     private $_registered = false;
 
-    public function register(){
+    public function register()
+    {
         //        phpdbg_break_next();
 
-        if($this->_registered)
+        if ($this->_registered)
             return;
 
         $this->_registered = true;
 
         // get types and metadata configurations
-        if ($theme_space_types = $this->view->resolveFilename('','space-types.php')) {
+        if ($theme_space_types = $this->view->resolveFilename('', 'space-types.php')) {
             $space_types = include $theme_space_types;
         } else {
-            $space_types = include APPLICATION_PATH.'/conf/space-types.php';
+            $space_types = include APPLICATION_PATH . '/conf/space-types.php';
         }
         $space_meta = key_exists('metadata', $space_types) && is_array($space_types['metadata']) ? $space_types['metadata'] : [];
 
-        if ($theme_agent_types = $this->view->resolveFilename('','agent-types.php')) {
+        if ($theme_agent_types = $this->view->resolveFilename('', 'agent-types.php')) {
             $agent_types = include $theme_agent_types;
         } else {
-            $agent_types = include APPLICATION_PATH.'/conf/agent-types.php';
+            $agent_types = include APPLICATION_PATH . '/conf/agent-types.php';
         }
         $agents_meta = key_exists('metadata', $agent_types) && is_array($agent_types['metadata']) ? $agent_types['metadata'] : [];
 
-        if ($theme_event_types = $this->view->resolveFilename('','event-types.php')) {
+        if ($theme_event_types = $this->view->resolveFilename('', 'event-types.php')) {
             $event_types = include $theme_event_types;
         } else {
-            $event_types = include APPLICATION_PATH.'/conf/event-types.php';
+            $event_types = include APPLICATION_PATH . '/conf/event-types.php';
         }
         $event_meta = key_exists('metadata', $event_types) && is_array($event_types['metadata']) ? $event_types['metadata'] : [];
 
-        if ($theme_project_types = $this->view->resolveFilename('','project-types.php')) {
+        if ($theme_project_types = $this->view->resolveFilename('', 'project-types.php')) {
             $project_types = include $theme_project_types;
         } else {
-            $project_types = include APPLICATION_PATH.'/conf/project-types.php';
+            $project_types = include APPLICATION_PATH . '/conf/project-types.php';
         }
         $projects_meta = key_exists('metadata', $project_types) && is_array($project_types['metadata']) ? $project_types['metadata'] : [];
 
-        if ($theme_opportunity_types = $this->view->resolveFilename('','opportunity-types.php')) {
+        if ($theme_opportunity_types = $this->view->resolveFilename('', 'opportunity-types.php')) {
             $opportunity_types = include $theme_opportunity_types;
         } else {
-            $opportunity_types = include APPLICATION_PATH.'/conf/opportunity-types.php';
+            $opportunity_types = include APPLICATION_PATH . '/conf/opportunity-types.php';
         }
         $opportunities_meta = key_exists('metadata', $opportunity_types) && is_array($opportunity_types['metadata']) ? $opportunity_types['metadata'] : [];
 
         // get types and metadata configurations
-        if ($theme_subsite_types = $this->view->resolveFilename('','subsite-types.php')) {
+        if ($theme_subsite_types = $this->view->resolveFilename('', 'subsite-types.php')) {
             $subsite_types = include $theme_subsite_types;
         } else {
-            $subsite_types = include APPLICATION_PATH.'/conf/subsite-types.php';
+            $subsite_types = include APPLICATION_PATH . '/conf/subsite-types.php';
         }
         $subsite_meta = key_exists('metadata', $subsite_types) && is_array($subsite_types['metadata']) ? $subsite_types['metadata'] : [];
 
-        if ($theme_seal_types = $this->view->resolveFilename('','seal-types.php')) {
+        if ($theme_seal_types = $this->view->resolveFilename('', 'seal-types.php')) {
             $seal_types = include $theme_seal_types;
         } else {
-            $seal_types = include APPLICATION_PATH.'/conf/seal-types.php';
+            $seal_types = include APPLICATION_PATH . '/conf/seal-types.php';
         }
         $seals_meta = key_exists('metadata', $seal_types) && is_array($seal_types['metadata']) ? $seal_types['metadata'] : [];
 
-        if ($theme_notification_types = $this->view->resolveFilename('','notification-types.php')) {
+        if ($theme_notification_types = $this->view->resolveFilename('', 'notification-types.php')) {
             $notification_types = include $theme_notification_types;
         } else {
-            $notification_types = include APPLICATION_PATH.'/conf/notification-types.php';
+            $notification_types = include APPLICATION_PATH . '/conf/notification-types.php';
         }
         $notification_meta = key_exists('metadata', $notification_types) && is_array($notification_types['metadata']) ? $notification_types['metadata'] : [];
 
@@ -796,9 +813,9 @@ class App extends \Slim\Slim{
         $this->registerController('term',           'MapasCulturais\Controllers\Term');
         $this->registerController('file',           'MapasCulturais\Controllers\File');
         $this->registerController('metalist',       'MapasCulturais\Controllers\MetaList');
-        $this->registerController('eventOccurrence','MapasCulturais\Controllers\EventOccurrence');
+        $this->registerController('eventOccurrence', 'MapasCulturais\Controllers\EventOccurrence');
 
-        $this->registerController('eventAttendance','MapasCulturais\Controllers\EventAttendance');
+        $this->registerController('eventAttendance', 'MapasCulturais\Controllers\EventAttendance');
 
         //workflow controllers
         $this->registerController('notification', 'MapasCulturais\Controllers\Notification');
@@ -818,7 +835,7 @@ class App extends \Slim\Slim{
                 'plural' => i::__('Super Administradores do SaaS'),
                 'another_roles' => ['saasAdmin', 'superAdmin', 'admin'],
                 'subsite' => false,
-                'can_user_manage_role' => function(UserInterface $user, $subsite_id) {
+                'can_user_manage_role' => function (UserInterface $user, $subsite_id) {
                     return $user->is('saasSuperAdmin');
                 }
             ],
@@ -827,7 +844,7 @@ class App extends \Slim\Slim{
                 'plural' => i::__('Administradores do SaaS'),
                 'another_roles' => ['superAdmin', 'admin'],
                 'subsite' => false,
-                'can_user_manage_role' => function(UserInterface $user, $subsite_id) {
+                'can_user_manage_role' => function (UserInterface $user, $subsite_id) {
                     return $user->is('saasSuperAdmin');
                 }
             ],
@@ -836,7 +853,7 @@ class App extends \Slim\Slim{
                 'plural' => i::__('Super Administradores'),
                 'another_roles' => ['admin'],
                 'subsite' => true,
-                'can_user_manage_role' => function(UserInterface $user, $subsite_id) {
+                'can_user_manage_role' => function (UserInterface $user, $subsite_id) {
                     return $user->is('superAdmin', $subsite_id);
                 }
             ],
@@ -845,7 +862,7 @@ class App extends \Slim\Slim{
                 'plural' => i::__('Administradores'),
                 'another_roles' => [],
                 'subsite' => true,
-                'can_user_manage_role' => function(UserInterface $user, $subsite_id) {
+                'can_user_manage_role' => function (UserInterface $user, $subsite_id) {
                     return $user->is('superAdmin', $subsite_id);
                 }
             ],
@@ -869,12 +886,12 @@ class App extends \Slim\Slim{
             'gallery' => new Definitions\FileGroup('gallery', ['^image/(jpeg|png)$'], \MapasCulturais\i::__('O arquivo enviado não é uma imagem válida.'), false),
             'registrationFileConfiguration' => new Definitions\FileGroup('registrationFileTemplate', ['^application/.*'], \MapasCulturais\i::__('O arquivo enviado não é um documento válido.'), true),
             'rules' => new Definitions\FileGroup('rules', ['^application/.*'], \MapasCulturais\i::__('O arquivo enviado não é um documento válido.'), true),
-            'logo'  => new Definitions\FileGroup('logo',['^image/(jpeg|png)$'], \MapasCulturais\i::__('O arquivo enviado não é uma imagem válida.'), true),
-            'background' => new Definitions\FileGroup('background',['^image/(jpeg|png)$'], \MapasCulturais\i::__('O arquivo enviado não é uma imagem válida.'),true),
-            'share' => new Definitions\FileGroup('share',['^image/(jpeg|png)$'], \MapasCulturais\i::__('O arquivo enviado não é uma imagem válida.'),true),
-            'institute'  => new Definitions\FileGroup('institute',['^image/(jpeg|png)$'], \MapasCulturais\i::__('O arquivo enviado não é uma imagem válida.'), true),
-            'favicon'  => new Definitions\FileGroup('favicon',['^image/(jpeg|png|x-icon|vnd.microsoft.icon)$'], \MapasCulturais\i::__('O arquivo enviado não é uma imagem válida.'), true),
-            'zipArchive'  => new Definitions\FileGroup('zipArchive',['^application/zip$'], \MapasCulturais\i::__('O arquivo não é um ZIP.'), true, null, true),
+            'logo'  => new Definitions\FileGroup('logo', ['^image/(jpeg|png)$'], \MapasCulturais\i::__('O arquivo enviado não é uma imagem válida.'), true),
+            'background' => new Definitions\FileGroup('background', ['^image/(jpeg|png)$'], \MapasCulturais\i::__('O arquivo enviado não é uma imagem válida.'), true),
+            'share' => new Definitions\FileGroup('share', ['^image/(jpeg|png)$'], \MapasCulturais\i::__('O arquivo enviado não é uma imagem válida.'), true),
+            'institute'  => new Definitions\FileGroup('institute', ['^image/(jpeg|png)$'], \MapasCulturais\i::__('O arquivo enviado não é uma imagem válida.'), true),
+            'favicon'  => new Definitions\FileGroup('favicon', ['^image/(jpeg|png|x-icon|vnd.microsoft.icon)$'], \MapasCulturais\i::__('O arquivo enviado não é uma imagem válida.'), true),
+            'zipArchive'  => new Definitions\FileGroup('zipArchive', ['^application/zip$'], \MapasCulturais\i::__('O arquivo não é um ZIP.'), true, null, true),
         ];
 
         // register file groups
@@ -912,28 +929,28 @@ class App extends \Slim\Slim{
         $this->registerFileGroup('registrationFileConfiguration', $file_groups['registrationFileConfiguration']);
         $this->registerFileGroup('registration', $file_groups['zipArchive']);
 
-        $this->registerFileGroup('subsite',$file_groups['header']);
-        $this->registerFileGroup('subsite',$file_groups['avatar']);
-        $this->registerFileGroup('subsite',$file_groups['logo']);
-        $this->registerFileGroup('subsite',$file_groups['background']);
-        $this->registerFileGroup('subsite',$file_groups['share']);
-        $this->registerFileGroup('subsite',$file_groups['institute']);
-        $this->registerFileGroup('subsite',$file_groups['favicon']);
-        $this->registerFileGroup('subsite',$file_groups['downloads']);
+        $this->registerFileGroup('subsite', $file_groups['header']);
+        $this->registerFileGroup('subsite', $file_groups['avatar']);
+        $this->registerFileGroup('subsite', $file_groups['logo']);
+        $this->registerFileGroup('subsite', $file_groups['background']);
+        $this->registerFileGroup('subsite', $file_groups['share']);
+        $this->registerFileGroup('subsite', $file_groups['institute']);
+        $this->registerFileGroup('subsite', $file_groups['favicon']);
+        $this->registerFileGroup('subsite', $file_groups['downloads']);
 
-        if ($theme_image_transformations = $this->view->resolveFilename('','image-transformations.php')) {
+        if ($theme_image_transformations = $this->view->resolveFilename('', 'image-transformations.php')) {
             $image_transformations = include $theme_image_transformations;
         } else {
-            $image_transformations = include APPLICATION_PATH.'/conf/image-transformations.php';
+            $image_transformations = include APPLICATION_PATH . '/conf/image-transformations.php';
         }
 
-        foreach($image_transformations as $name => $transformation)
+        foreach ($image_transformations as $name => $transformation)
             $this->registerImageTransformation($name, $transformation);
 
 
         // registration agent relations
 
-        foreach($this->_config['registration.agentRelations'] as $config){
+        foreach ($this->_config['registration.agentRelations'] as $config) {
             $def = new Definitions\RegistrationAgentRelation($config);
             $opportunities_meta[$def->metadataName] = $def->getMetadataConfiguration();
 
@@ -943,7 +960,8 @@ class App extends \Slim\Slim{
 
         // all metalist groups
         $metalist_groups = [
-            'links' => new Definitions\MetaListGroup('links',
+            'links' => new Definitions\MetaListGroup(
+                'links',
                 [
                     'title' => [
                         'label' => 'Nome'
@@ -959,7 +977,8 @@ class App extends \Slim\Slim{
                 \MapasCulturais\i::__('O arquivo enviado não é uma imagem válida.'),
                 true
             ),
-            'videos' => new Definitions\MetaListGroup('videos',
+            'videos' => new Definitions\MetaListGroup(
+                'videos',
                 [
                     'title' => [
                         'label' => 'Nome'
@@ -997,14 +1016,14 @@ class App extends \Slim\Slim{
         $this->registerMetaListGroup('seal', $metalist_groups['videos']);
 
         // register space types and spaces metadata
-        foreach($space_types['items'] as $group_name => $group_config){
+        foreach ($space_types['items'] as $group_name => $group_config) {
             $entity_class = 'MapasCulturais\Entities\Space';
             $group = new Definitions\EntityTypeGroup($entity_class, $group_name, $group_config['range'][0], $group_config['range'][1]);
             $this->registerEntityTypeGroup($group);
 
             $group_meta = key_exists('metadata', $group_config) ? $group_config['metadata'] : [];
 
-            foreach ($group_config['items'] as $type_id => $type_config){
+            foreach ($group_config['items'] as $type_id => $type_config) {
                 $type = new Definitions\EntityType($entity_class, $type_id, $type_config['name']);
                 $group->registerType($type);
                 $this->registerEntityType($type);
@@ -1012,19 +1031,19 @@ class App extends \Slim\Slim{
                 $type_meta = $type_config['metadata'] = key_exists('metadata', $type_config) && is_array($type_config['metadata']) ? $type_config['metadata'] : [];
 
                 // add group metadata to space type
-                if(key_exists('metadata', $group_config))
-                    foreach($group_meta as $meta_key => $meta_config)
-                        if(!key_exists($meta_key, $type_meta) || key_exists($meta_key, $type_meta) && is_null($type_config['metadata'][$meta_key]))
-                                $type_config['metadata'][$meta_key] = $meta_config;
-
-                // add space metadata to space type
-                foreach($space_meta as $meta_key => $meta_config)
-                    if(!key_exists($meta_key, $type_meta) || key_exists($meta_key, $type_meta) && is_null($type_config['metadata'][$meta_key]))
+                if (key_exists('metadata', $group_config))
+                    foreach ($group_meta as $meta_key => $meta_config)
+                        if (!key_exists($meta_key, $type_meta) || key_exists($meta_key, $type_meta) && is_null($type_config['metadata'][$meta_key]))
                             $type_config['metadata'][$meta_key] = $meta_config;
 
-                foreach($type_config['metadata'] as $meta_key => $meta_config){
-                   $metadata = new Definitions\Metadata($meta_key, $meta_config);
-                   $this->registerMetadata($metadata, $entity_class, $type_id);
+                // add space metadata to space type
+                foreach ($space_meta as $meta_key => $meta_config)
+                    if (!key_exists($meta_key, $type_meta) || key_exists($meta_key, $type_meta) && is_null($type_config['metadata'][$meta_key]))
+                        $type_config['metadata'][$meta_key] = $meta_config;
+
+                foreach ($type_config['metadata'] as $meta_key => $meta_config) {
+                    $metadata = new Definitions\Metadata($meta_key, $meta_config);
+                    $this->registerMetadata($metadata, $entity_class, $type_id);
                 }
             }
         }
@@ -1032,18 +1051,18 @@ class App extends \Slim\Slim{
         // register agent types and agent metadata
         $entity_class = 'MapasCulturais\Entities\Agent';
 
-        foreach($agent_types['items'] as $type_id => $type_config){
+        foreach ($agent_types['items'] as $type_id => $type_config) {
             $type = new Definitions\EntityType($entity_class, $type_id, $type_config['name']);
 
             $this->registerEntityType($type);
             $type_config['metadata'] = key_exists('metadata', $type_config) && is_array($type_config['metadata']) ? $type_config['metadata'] : [];
 
             // add agents metadata definition to agent type
-            foreach($agents_meta as $meta_key => $meta_config)
-                if(!key_exists($meta_key, $type_meta) || key_exists($meta_key, $type_meta) && is_null($type_config['metadata'][$meta_key]))
+            foreach ($agents_meta as $meta_key => $meta_config)
+                if (!key_exists($meta_key, $type_meta) || key_exists($meta_key, $type_meta) && is_null($type_config['metadata'][$meta_key]))
                     $type_config['metadata'][$meta_key] = $meta_config;
 
-            foreach($type_config['metadata'] as $meta_key => $meta_config){
+            foreach ($type_config['metadata'] as $meta_key => $meta_config) {
 
                 $metadata = new Definitions\Metadata($meta_key, $meta_config);
                 $this->registerMetadata($metadata, $entity_class, $type_id);
@@ -1053,18 +1072,18 @@ class App extends \Slim\Slim{
         // register event types and event metadata
         $entity_class = 'MapasCulturais\Entities\Event';
 
-        foreach($event_types['items'] as $type_id => $type_config){
+        foreach ($event_types['items'] as $type_id => $type_config) {
             $type = new Definitions\EntityType($entity_class, $type_id, $type_config['name']);
 
             $this->registerEntityType($type);
             $type_config['metadata'] = key_exists('metadata', $type_config) && is_array($type_config['metadata']) ? $type_config['metadata'] : [];
 
             // add events metadata definition to event type
-            foreach($event_meta as $meta_key => $meta_config)
-                if(!key_exists($meta_key, $type_meta) || key_exists($meta_key, $type_meta) && is_null($type_config['metadata'][$meta_key]))
+            foreach ($event_meta as $meta_key => $meta_config)
+                if (!key_exists($meta_key, $type_meta) || key_exists($meta_key, $type_meta) && is_null($type_config['metadata'][$meta_key]))
                     $type_config['metadata'][$meta_key] = $meta_config;
 
-            foreach($type_config['metadata'] as $meta_key => $meta_config){
+            foreach ($type_config['metadata'] as $meta_key => $meta_config) {
                 $metadata = new Definitions\Metadata($meta_key, $meta_config);
                 $this->registerMetadata($metadata, $entity_class, $type_id);
             }
@@ -1073,18 +1092,18 @@ class App extends \Slim\Slim{
         // register project types and project metadata
         $entity_class = 'MapasCulturais\Entities\Project';
 
-        foreach($project_types['items'] as $type_id => $type_config){
+        foreach ($project_types['items'] as $type_id => $type_config) {
             $type = new Definitions\EntityType($entity_class, $type_id, $type_config['name']);
 
             $this->registerEntityType($type);
             $type_config['metadata'] = key_exists('metadata', $type_config) && is_array($type_config['metadata']) ? $type_config['metadata'] : [];
 
             // add projects metadata definition to project type
-            foreach($projects_meta as $meta_key => $meta_config)
-                if(!key_exists($meta_key, $type_meta) || key_exists($meta_key, $type_meta) && is_null($type_config['metadata'][$meta_key]))
+            foreach ($projects_meta as $meta_key => $meta_config)
+                if (!key_exists($meta_key, $type_meta) || key_exists($meta_key, $type_meta) && is_null($type_config['metadata'][$meta_key]))
                     $type_config['metadata'][$meta_key] = $meta_config;
 
-            foreach($type_config['metadata'] as $meta_key => $meta_config){
+            foreach ($type_config['metadata'] as $meta_key => $meta_config) {
                 $metadata = new Definitions\Metadata($meta_key, $meta_config);
                 $this->registerMetadata($metadata, $entity_class, $type_id);
             }
@@ -1093,18 +1112,18 @@ class App extends \Slim\Slim{
         // register opportunity types and opportunity metadata
         $entity_class = 'MapasCulturais\Entities\Opportunity';
 
-        foreach($opportunity_types['items'] as $type_id => $type_config){
+        foreach ($opportunity_types['items'] as $type_id => $type_config) {
             $type = new Definitions\EntityType($entity_class, $type_id, $type_config['name']);
 
             $this->registerEntityType($type);
             $type_config['metadata'] = key_exists('metadata', $type_config) && is_array($type_config['metadata']) ? $type_config['metadata'] : [];
 
             // add opportunities metadata definition to opportunity type
-            foreach($opportunities_meta as $meta_key => $meta_config)
-                if(!key_exists($meta_key, $type_meta) || key_exists($meta_key, $type_meta) && is_null($type_config['metadata'][$meta_key]))
+            foreach ($opportunities_meta as $meta_key => $meta_config)
+                if (!key_exists($meta_key, $type_meta) || key_exists($meta_key, $type_meta) && is_null($type_config['metadata'][$meta_key]))
                     $type_config['metadata'][$meta_key] = $meta_config;
 
-            foreach($type_config['metadata'] as $meta_key => $meta_config){
+            foreach ($type_config['metadata'] as $meta_key => $meta_config) {
                 $metadata = new Definitions\Metadata($meta_key, $meta_config);
                 $this->registerMetadata($metadata, $entity_class, $type_id);
             }
@@ -1114,24 +1133,24 @@ class App extends \Slim\Slim{
         $entity_class = 'MapasCulturais\Entities\Subsite';
 
         // add subsite metadata definition to event type
-        foreach($subsite_meta as $meta_key => $meta_config){
+        foreach ($subsite_meta as $meta_key => $meta_config) {
             $metadata = new Definitions\Metadata($meta_key, $meta_config);
             $this->registerMetadata($metadata, $entity_class);
         }
 
         // register seal time unit types
-		$entity_class = 'MapasCulturais\Entities\Seal';
+        $entity_class = 'MapasCulturais\Entities\Seal';
 
-        foreach($seal_types['items'] as $type_id => $type_config){
-        	$type = new Definitions\EntityType($entity_class, $type_id, $type_config['name']);
-        	$this->registerEntityType($type);
+        foreach ($seal_types['items'] as $type_id => $type_config) {
+            $type = new Definitions\EntityType($entity_class, $type_id, $type_config['name']);
+            $this->registerEntityType($type);
 
-        	// add projects metadata definition to project type
-            foreach($seals_meta as $meta_key => $meta_config)
-                if(!key_exists($meta_key, $type_meta) || key_exists($meta_key, $type_meta) && is_null($type_config['metadata'][$meta_key]))
+            // add projects metadata definition to project type
+            foreach ($seals_meta as $meta_key => $meta_config)
+                if (!key_exists($meta_key, $type_meta) || key_exists($meta_key, $type_meta) && is_null($type_config['metadata'][$meta_key]))
                     $type_config['metadata'][$meta_key] = $meta_config;
 
-            foreach($type_config['metadata'] as $meta_key => $meta_config){
+            foreach ($type_config['metadata'] as $meta_key => $meta_config) {
                 $metadata = new Definitions\Metadata($meta_key, $meta_config);
                 $this->registerMetadata($metadata, $entity_class, $type_id);
             }
@@ -1141,19 +1160,19 @@ class App extends \Slim\Slim{
         $entity_class = 'MapasCulturais\Entities\Notification';
 
         // add notification metadata definition
-        foreach($notification_meta as $meta_key => $meta_config){
+        foreach ($notification_meta as $meta_key => $meta_config) {
             $metadata = new Definitions\Metadata($meta_key, $meta_config);
             $this->registerMetadata($metadata, $entity_class);
         }
 
         // register taxonomies
-        if ($theme_taxonomies = $this->view->resolveFilename('','taxonomies.php')) {
+        if ($theme_taxonomies = $this->view->resolveFilename('', 'taxonomies.php')) {
             $taxonomies = include $theme_taxonomies;
         } else {
             $taxonomies = include APPLICATION_PATH . '/conf/taxonomies.php';
         }
 
-        foreach($taxonomies as $taxonomy_id => $taxonomy_definition){
+        foreach ($taxonomies as $taxonomy_id => $taxonomy_definition) {
             $taxonomy_slug = $taxonomy_definition['slug'];
             $taxonomy_required = key_exists('required', $taxonomy_definition) ? $taxonomy_definition['required'] : false;
             $taxonomy_description = key_exists('description', $taxonomy_definition) ? $taxonomy_definition['description'] : '';
@@ -1163,36 +1182,37 @@ class App extends \Slim\Slim{
 
             $entity_classes = $taxonomy_definition['entities'];
 
-            foreach($entity_classes as $entity_class){
+            foreach ($entity_classes as $entity_class) {
                 $this->registerTaxonomy($entity_class, $definition);
             }
         }
 
         $this->view->register();
 
-        foreach($this->_modules as $module){
+        foreach ($this->_modules as $module) {
             $module->register();
         }
 
-        foreach($this->_plugins as $plugin){
+        foreach ($this->_plugins as $plugin) {
             $plugin->register();
         }
 
-        $this->applyHookBoundTo($this, 'app.register',[&$this->_register]);
+        $this->applyHookBoundTo($this, 'app.register', [&$this->_register]);
     }
 
 
 
-    function getRegisteredGeoDivisions(){
+    function getRegisteredGeoDivisions()
+    {
         $result = [];
-        foreach($this->_config['app.geoDivisionsHierarchy'] as $key => $division) {
+        foreach ($this->_config['app.geoDivisionsHierarchy'] as $key => $division) {
 
             $display = true;
             if (substr($key, 0, 1) == '_') {
                 $display = false;
                 $key = substr($key, 1);
             }
-            
+
             if (!is_array($division)) { // for backward compability version < 4.0, $division is string not a array.
                 $d = new \stdClass();
                 $d->key = $key;
@@ -1221,19 +1241,21 @@ class App extends \Slim\Slim{
      *
      * @return mixed
      */
-    public function getConfig($key = null){
-        if(is_null($key))
+    public function getConfig($key = null)
+    {
+        if (is_null($key))
             return $this->_config;
         else
-            return key_exists ($key, $this->_config) ? $this->_config[$key] : null;
-
+            return key_exists($key, $this->_config) ? $this->_config[$key] : null;
     }
 
-    public function getPlugins(){
+    public function getPlugins()
+    {
         return $this->_plugins;
     }
 
-    public function getModules(){
+    public function getModules()
+    {
         return $this->_modules;
     }
 
@@ -1248,7 +1270,8 @@ class App extends \Slim\Slim{
      *
      * @return string the URL to action
      */
-    public function createUrl($controller_id, $action_name = '', $data = []){
+    public function createUrl($controller_id, $action_name = '', $data = [])
+    {
         return $this->_routesManager->createUrl($controller_id, $action_name, $data);
     }
 
@@ -1270,32 +1293,32 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Entities\File|\MapasCulturais\Entities\File[]
      */
-    public function handleUpload($key, $file_class_name){
-        if(is_array($_FILES) && key_exists($key, $_FILES)){
+    public function handleUpload($key, $file_class_name)
+    {
+        if (is_array($_FILES) && key_exists($key, $_FILES)) {
 
-            if(is_array($_FILES[$key]['name'])){
+            if (is_array($_FILES[$key]['name'])) {
                 $result = [];
-                foreach(array_keys($_FILES[$key]['name']) as $i){
+                foreach (array_keys($_FILES[$key]['name']) as $i) {
                     $tmp_file = [];
-                    foreach(array_keys($_FILES[$key]) as $k){
+                    foreach (array_keys($_FILES[$key]) as $k) {
                         $tmp_file[$k] = $k == 'name' ? $this->sanitizeFilename($_FILES[$key][$k][$i]) : $_FILES[$key][$k][$i];
                     }
 
                     $result[] = new $file_class_name($tmp_file);
                 }
-            }else{
+            } else {
 
-                if($_FILES[$key]['error']){
+                if ($_FILES[$key]['error']) {
                     throw new \MapasCulturais\Exceptions\FileUploadError($key, $_FILES[$key]['error']);
                 }
 
                 $mime = mime_content_type($_FILES[$key]['tmp_name']);
                 $_FILES[$key]['name'] = $this->sanitizeFilename($_FILES[$key]['name'], $mime);
                 $result = new $file_class_name($_FILES[$key]);
-
             }
             return $result;
-        }else{
+        } else {
             return null;
         }
     }
@@ -1309,9 +1332,10 @@ class App extends \Slim\Slim{
      *
      * @return string The sanitized filename.
      */
-    function sanitizeFilename($filename, $mimetype = false){
-        $filename = str_replace(' ','_', strtolower($filename));
-        if(is_callable($this->_config['app.sanitize_filename_function'])){
+    function sanitizeFilename($filename, $mimetype = false)
+    {
+        $filename = str_replace(' ', '_', strtolower($filename));
+        if (is_callable($this->_config['app.sanitize_filename_function'])) {
             $cb = $this->_config['app.sanitize_filename_function'];
             $filename = $cb($filename);
         }
@@ -1331,7 +1355,6 @@ class App extends \Slim\Slim{
 
             if (array_key_exists($mimetype, $imagetypes))
                 $filename .= '.' . $imagetypes[$mimetype];
-
         }
 
         return $filename;
@@ -1350,7 +1373,8 @@ class App extends \Slim\Slim{
      *
      * @param  string   $name   A hook name (Optional)
      */
-    public function clearHooks($name = null) {
+    public function clearHooks($name = null)
+    {
         if (is_null($name)) {
             $this->_hooks = [];
             $this->_excludeHooks = [];
@@ -1381,7 +1405,8 @@ class App extends \Slim\Slim{
      * @param  string     $name     A hook name (Optional)
      * @return array|null
      */
-    public function getHooks($name = null) {
+    public function getHooks($name = null)
+    {
         return $this->_getHookCallables($name);
     }
 
@@ -1395,7 +1420,8 @@ class App extends \Slim\Slim{
 
     protected $hook_count = 0;
 
-    function hook($name, $callable, $priority = 10) {
+    function hook($name, $callable, $priority = 10)
+    {
         $this->hook_count++;
         $priority += ($this->hook_count / 100000);
 
@@ -1408,7 +1434,7 @@ class App extends \Slim\Slim{
                     $this->_excludeHooks[$hook] = [];
 
                 $this->_excludeHooks[$hook][] = $callable;
-            }else {
+            } else {
                 $priority_key = "$priority";
                 $hook = $this->_compileHook($hook);
 
@@ -1425,10 +1451,11 @@ class App extends \Slim\Slim{
         }
     }
 
-    function _logHook($name){
+    function _logHook($name)
+    {
         $n = 1;
 
-        if(strpos($name, 'template(') === 0){
+        if (strpos($name, 'template(') === 0) {
             $n = 2;
         }
 
@@ -1446,18 +1473,20 @@ class App extends \Slim\Slim{
      * Invoke hook
      * @param  string   $name       The hook name
      * @param  mixed    $hookArgs   (Optional) Argument for hooked functions
+     * 
+     * @return callable[]
      */
-    function applyHook($name, $hookArg = null) {
+    function applyHook($name, $hookArg = null)
+    {
         if (is_null($hookArg))
             $hookArg = [];
         else if (!is_array($hookArg))
             $hookArg = [$hookArg];
 
-        if ($this->_config['app.log.hook']){
+        if ($this->_config['app.log.hook']) {
             $conf = $this->_config['app.log.hook'];
-            if(is_bool($conf) || preg_match('#' . str_replace('*', '.*', $conf) . '#', $name)){
+            if (is_bool($conf) || preg_match('#' . str_replace('*', '.*', $conf) . '#', $name)) {
                 $this->_logHook($name);
-
             }
         }
 
@@ -1465,6 +1494,11 @@ class App extends \Slim\Slim{
         foreach ($callables as $callable) {
             call_user_func_array($callable, $hookArg);
         }
+
+
+        array_pop($this->hookStack);
+
+        return $callables;
     }
 
     /**
@@ -1473,16 +1507,19 @@ class App extends \Slim\Slim{
      * @param  object $target_object Object to bind hook
      * @param  string   $name       The hook name
      * @param  mixed    $hookArgs   (Optional) Argument for hooked functions
+     * 
+     * @return callable[]
      */
-    function applyHookBoundTo($target_object, $name, $hookArg = null) {
+    function applyHookBoundTo($target_object, $name, $hookArg = null)
+    {
         if (is_null($hookArg))
             $hookArg = [];
         else if (!is_array($hookArg))
             $hookArg = [$hookArg];
 
-        if ($this->_config['app.log.hook']){
+        if ($this->_config['app.log.hook']) {
             $conf = $this->_config['app.log.hook'];
-            if(is_bool($conf) || preg_match('#' . str_replace('*', '.*', $conf) . '#', $name)){
+            if (is_bool($conf) || preg_match('#' . str_replace('*', '.*', $conf) . '#', $name)) {
                 $this->_logHook($name);
             }
         }
@@ -1492,11 +1529,17 @@ class App extends \Slim\Slim{
             $callable = \Closure::bind($callable, $target_object);
             call_user_func_array($callable, $hookArg);
         }
+
+
+        array_pop($this->hookStack);
+
+        return $callables;
     }
 
 
-    function _getHookCallables($name) {
-        if(isset($this->_hookCache[$name])){
+    function _getHookCallables($name)
+    {
+        if (isset($this->_hookCache[$name])) {
             return $this->_hookCache[$name];
         }
         $exclude_list = [];
@@ -1511,7 +1554,7 @@ class App extends \Slim\Slim{
             if (preg_match($hook, $name)) {
                 foreach ($_callables as $priority => $callables) {
                     foreach ($callables as $callable) {
-                        if (!in_array($callable, $exclude_list)){
+                        if (!in_array($callable, $exclude_list)) {
                             $result[] = (object) ['callable' => $callable, 'priority' => (float) $priority];
                         }
                     }
@@ -1519,8 +1562,8 @@ class App extends \Slim\Slim{
             }
         }
 
-        usort($result, function($a,$b){
-            if($a->priority > $b->priority){
+        usort($result, function ($a, $b) {
+            if ($a->priority > $b->priority) {
                 return 1;
             } elseif ($a->priority < $b->priority) {
                 return -1;
@@ -1529,14 +1572,17 @@ class App extends \Slim\Slim{
             }
         });
 
-        $result = array_map(function($el) { return $el->callable; }, $result);
+        $result = array_map(function ($el) {
+            return $el->callable;
+        }, $result);
 
         $this->_hookCache[$name] = $result;
 
         return $result;
     }
 
-    protected function _compileHook($hook) {
+    protected function _compileHook($hook)
+    {
         $hook = trim($hook);
 
         if ($hook[0] === '-')
@@ -1567,22 +1613,25 @@ class App extends \Slim\Slim{
      **********************************************/
     private $permissionCachePendingQueue = [];
 
-    public function enqueueEntityToPCacheRecreation(Entity $entity){
+    public function enqueueEntityToPCacheRecreation(Entity $entity)
+    {
         if (!$entity->__skipQueuingPCacheRecreation) {
             $this->permissionCachePendingQueue["$entity"] = $entity;
         }
     }
 
-    public function isEntityEnqueuedToPCacheRecreation(Entity $entity){
+    public function isEntityEnqueuedToPCacheRecreation(Entity $entity)
+    {
         return isset($this->permissionCachePendingQueue["$entity"]);
     }
 
-    public function persistPCachePendingQueue(){
+    public function persistPCachePendingQueue()
+    {
         $created = false;
-        foreach($this->permissionCachePendingQueue as $entity) {
+        foreach ($this->permissionCachePendingQueue as $entity) {
             if (is_int($entity->id) && !$this->repo('PermissionCachePending')->findBy([
-                    'objectId' => $entity->id, 'objectType' => $entity->getClassName()
-                ])) {
+                'objectId' => $entity->id, 'objectType' => $entity->getClassName()
+            ])) {
                 $pendingCache = new \MapasCulturais\Entities\PermissionCachePending();
                 $pendingCache->objectId = $entity->id;
                 $pendingCache->objectType = $entity->getClassName();
@@ -1599,13 +1648,14 @@ class App extends \Slim\Slim{
         $this->permissionCachePendingQueue = [];
     }
 
-    public function setCurrentSubsiteId(int $subsite_id = null) {
-        if(is_null($subsite_id)) {
+    public function setCurrentSubsiteId(int $subsite_id = null)
+    {
+        if (is_null($subsite_id)) {
             $this->_subsite = null;
         } else {
             $subsite = $this->repo('Subsite')->find($subsite_id);
 
-            if(!$subsite) {
+            if (!$subsite) {
                 throw new \Exception('Subsite not found');
             }
 
@@ -1615,15 +1665,18 @@ class App extends \Slim\Slim{
 
     private $recreatedPermissionCacheList = [];
 
-    public function setEntityPermissionCacheAsRecreated(Entity $entity){
+    public function setEntityPermissionCacheAsRecreated(Entity $entity)
+    {
         $this->recreatedPermissionCacheList["$entity"] = $entity;
     }
 
-    public function isEntityPermissionCacheRecreated(Entity $entity){
+    public function isEntityPermissionCacheRecreated(Entity $entity)
+    {
         return isset($this->recreatedPermissionCacheList["$entity"]);
     }
 
-    public function recreatePermissionsCache(){
+    public function recreatePermissionsCache()
+    {
         $item = $this->repo('PermissionCachePending')->findOneBy(['status' => 0], ['id' => 'ASC']);
         if ($item) {
             $start_time = microtime(true);
@@ -1641,27 +1694,27 @@ class App extends \Slim\Slim{
                 if ($entity) {
                     $entity->recreatePermissionCache();
                 }
-                
+
                 $this->em->remove($item);
 
                 $this->em->flush();
                 $conn->commit();
-            } catch (\ExceptionAa $e ){
-                
+            } catch (\ExceptionAa $e) {
+
                 $conn->rollBack();
-                
+
                 $this->disableAccessControl();
                 $item->status = 0;
                 $item->save(true);
                 $this->enableAccessControl();
 
-                if(php_sapi_name()==="cli"){
+                if (php_sapi_name() === "cli") {
                     echo "\n\t - ERROR - {$e->getMessage()}";
                 }
                 throw $e;
             }
 
-            if($this->config['app.log.pcache']){
+            if ($this->config['app.log.pcache']) {
                 $end_time = microtime(true);
                 $total_time = number_format($end_time - $start_time, 1);
 
@@ -1680,36 +1733,39 @@ class App extends \Slim\Slim{
      *
      * @return (int|null) ID of the current site or Null for main site
      */
-    public function getCurrentSubsiteId(){
+    public function getCurrentSubsiteId()
+    {
         // @TODO: alterar isto quando for implementada a possibilidade de termos instalações de subsite com o tema diferente do Subsite
-        if($this->_subsite){
+        if ($this->_subsite) {
             return $this->_subsite->id;
         }
 
         return null;
     }
 
-    public function getCurrentSubsite(){
+    public function getCurrentSubsite()
+    {
         return $this->_subsite;
     }
 
-    public function getMaxUploadSize($useSuffix=true){
+    public function getMaxUploadSize($useSuffix = true)
+    {
         $MB = 1024;
         $GB = $MB * 1024;
 
-        $convertToKB = function($size) use($MB, $GB){
-            switch(strtolower(substr($size, -1))){
+        $convertToKB = function ($size) use ($MB, $GB) {
+            switch (strtolower(substr($size, -1))) {
                 case 'k';
                     $size = intval($size);
-                break;
+                    break;
 
                 case 'm':
                     $size = intval($size) * $MB;
-                break;
+                    break;
 
                 case 'g':
                     $size = intval($size) * $GB;
-                break;
+                    break;
             }
 
             return $size;
@@ -1721,17 +1777,17 @@ class App extends \Slim\Slim{
 
         $result = min($max_upload, $max_post, $memory_limit);
 
-        if(!$useSuffix)
+        if (!$useSuffix)
             return $result;
 
-        if($result < $MB){
+        if ($result < $MB) {
             $result .= ' KB';
-        }else if($result < $GB){
+        } else if ($result < $GB) {
             $result = number_format($result / $MB, 0) . ' MB';
-        }else{
+        } else {
             $result = $result / $GB;
             $formated = number_format($result, 1);
-            if( $formated == (int) $result )
+            if ($formated == (int) $result)
                 $result = intval($result) . ' GB';
             else
                 $result = $formated . ' GB';
@@ -1740,15 +1796,18 @@ class App extends \Slim\Slim{
         return $result;
     }
 
-    public function getOpportunityRegistrationAgentRelationGroupName(){
+    public function getOpportunityRegistrationAgentRelationGroupName()
+    {
         return 'registration';
     }
 
-    public function getSiteName(){
+    public function getSiteName()
+    {
         return $this->_config['app.siteName'];
     }
 
-    public function getSiteDescription(){
+    public function getSiteDescription()
+    {
         return $this->_config['app.siteDescription'];
     }
 
@@ -1756,7 +1815,8 @@ class App extends \Slim\Slim{
      * Returns the RoutesManager
      * @return \MapasCulturais\RoutesManager
      */
-    public function getRoutesManager(){
+    public function getRoutesManager()
+    {
         return $this->_routesManager;
     }
 
@@ -1764,7 +1824,8 @@ class App extends \Slim\Slim{
      * Returns the Doctrine Entity Manager
      * @return \Doctrine\ORM\EntityManager the Doctrine Entity Manager
      */
-    public function getEm(){
+    public function getEm()
+    {
         return $this->_em;
     }
 
@@ -1772,7 +1833,8 @@ class App extends \Slim\Slim{
      * Returns the view object
      * @return \MapasCulturais\Theme
      */
-    public function getView(){
+    public function getView()
+    {
         return $this->view;
     }
 
@@ -1780,7 +1842,8 @@ class App extends \Slim\Slim{
      * Returns the Cache Component
      * @return \Doctrine\Common\Cache\CacheProvider
      */
-    public function getCache(){
+    public function getCache()
+    {
         return $this->_cache;
     }
 
@@ -1788,7 +1851,8 @@ class App extends \Slim\Slim{
      * Returns the Multisite Cache Component
      * @return \Doctrine\Common\Cache\CacheProvider
      */
-    public function getMsCache(){
+    public function getMsCache()
+    {
         return $this->_mscache;
     }
 
@@ -1796,7 +1860,8 @@ class App extends \Slim\Slim{
      * Runtime Runtime Cache Component
      * @return \Doctrine\Common\Cache\ArrayCache
      */
-    public function getRCache(){
+    public function getRCache()
+    {
         return $this->_rcache;
     }
 
@@ -1804,7 +1869,8 @@ class App extends \Slim\Slim{
      * Returns the Auth Manager Component
      * @return \MapasCulturais\Auth
      */
-    public function getAuth(){
+    public function getAuth()
+    {
         return $this->_auth;
     }
 
@@ -1812,7 +1878,8 @@ class App extends \Slim\Slim{
      * Returns the base url of the project
      * @return string the base url
      */
-    public function getBaseUrl(){
+    public function getBaseUrl()
+    {
         return $this->_config['base.url'];
     }
 
@@ -1820,7 +1887,8 @@ class App extends \Slim\Slim{
      * Returns the asset url of the project
      * @return string the asset url
      */
-    public function getAssetUrl(){
+    public function getAssetUrl()
+    {
         return isset($this->_config['base.assetUrl']) ? $this->_config['base.assetUrl'] : $this->getBaseUrl() . 'assets/';
     }
 
@@ -1828,7 +1896,8 @@ class App extends \Slim\Slim{
      * Returns the logged in user
      * @return \MapasCulturais\Entities\User
      */
-    public function getUser(){
+    public function getUser()
+    {
         return $this->auth->getAuthenticatedUser();
     }
 
@@ -1836,7 +1905,8 @@ class App extends \Slim\Slim{
      * Returns the File Storage Component
      * @return \MapasCulturais\Storage
      */
-    public function getStorage(){
+    public function getStorage()
+    {
         return $this->_storage;
     }
 
@@ -1854,11 +1924,12 @@ class App extends \Slim\Slim{
      * @param string $name Repository Class Name
      * @return Repository the Entity Repository
      */
-    public function repo($name){
+    public function repo($name)
+    {
 
         // add MapasCulturais\Entities namespace if no namespace in repo name
-        if(strpos($name, '\\') === false)
-                $name = "\MapasCulturais\Entities\\{$name}";
+        if (strpos($name, '\\') === false)
+            $name = "\MapasCulturais\Entities\\{$name}";
 
         return $this->em->getRepository($name);
     }
@@ -1874,7 +1945,8 @@ class App extends \Slim\Slim{
      * @param Definitions\Role $role the role definition
      * @return void
      */
-    public function registerRole(Definitions\Role $role){
+    public function registerRole(Definitions\Role $role)
+    {
         $this->_register['roles'][$role->getRole()] = $role;
     }
 
@@ -1883,7 +1955,8 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Definitions\Role[]
      */
-    public function getRoles() {
+    public function getRoles()
+    {
         return $this->_register['roles'];
     }
 
@@ -1893,7 +1966,8 @@ class App extends \Slim\Slim{
      * @param string $role
      * @return \MapasCulturais\Definitions\Role|null
      */
-    public function getRoleDefinition(string $role) {
+    public function getRoleDefinition(string $role)
+    {
         return $this->_register['roles'][$role] ?? null;
     }
 
@@ -1903,14 +1977,16 @@ class App extends \Slim\Slim{
      * @param string $role
      * @return string
      */
-    public function getRoleName(string $role){
+    public function getRoleName(string $role)
+    {
         $def = $this->_register['roles'][$role] ?? null;
         return $def ? $def->name : $role;
     }
 
 
-    function registerRegistrationAgentRelation(Definitions\RegistrationAgentRelation $def){
-        if(key_exists($def->agentRelationGroupName, $this->_register['registration_agent_relations'])){
+    function registerRegistrationAgentRelation(Definitions\RegistrationAgentRelation $def)
+    {
+        if (key_exists($def->agentRelationGroupName, $this->_register['registration_agent_relations'])) {
             throw new \Exception('There is already a RegistrationAgentRelation with agent relation group name "' . $def->agentRelationGroupName . '"');
         }
 
@@ -1921,28 +1997,32 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Definitions\RegistrationAgentRelation[]
      */
-    function getRegisteredRegistrationAgentRelations(){
+    function getRegisteredRegistrationAgentRelations()
+    {
         return $this->_register['registration_agent_relations'];
     }
 
-    function getRegistrationOwnerDefinition(){
+    function getRegistrationOwnerDefinition()
+    {
         $config = $this->getConfig('registration.ownerDefinition');
         $definition = new Definitions\RegistrationAgentRelation($config);
         return $definition;
     }
 
-    function getRegistrationAgentsDefinitions(){
+    function getRegistrationAgentsDefinitions()
+    {
         $definitions =  ['owner' => $this->getRegistrationOwnerDefinition()];
-        foreach ($this->getRegisteredRegistrationAgentRelations() as $groupName => $def){
+        foreach ($this->getRegisteredRegistrationAgentRelations() as $groupName => $def) {
             $definitions[$groupName] = $def;
         }
         return $definitions;
     }
 
-    function getRegisteredRegistrationAgentRelationByAgentRelationGroupName($group_name){
-        if(key_exists($group_name, $this->_register['registration_agent_relations'])){
+    function getRegisteredRegistrationAgentRelationByAgentRelationGroupName($group_name)
+    {
+        if (key_exists($group_name, $this->_register['registration_agent_relations'])) {
             return $this->_register['registration_agent_relations'][$group_name];
-        }else{
+        } else {
             return null;
         }
     }
@@ -1960,8 +2040,9 @@ class App extends \Slim\Slim{
      * @param string $api_output_id the api_output id
      *
      */
-    public function registerApiOutput($api_output_class_name, $api_output_id = null){
-        if(is_null($api_output_id))
+    public function registerApiOutput($api_output_class_name, $api_output_id = null)
+    {
+        if (is_null($api_output_id))
             $api_output_id = strtolower(str_replace('\\', '.', str_replace('MapasCulturais\ApiOutputs\\', '', $api_output_class_name)));
 
         $this->_register['api_outputs'][$api_output_id] = $api_output_class_name;
@@ -1977,12 +2058,12 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\ApiOutput the API Output
      */
-    public function getRegisteredApiOutputByClassName($api_output_class_name){
-        if(in_array($api_output_class_name, $this->_register['api_outputs']) && class_exists($api_output_class_name) && is_subclass_of($api_output_class_name, '\MapasCulturais\ApiOutput'))
+    public function getRegisteredApiOutputByClassName($api_output_class_name)
+    {
+        if (in_array($api_output_class_name, $this->_register['api_outputs']) && class_exists($api_output_class_name) && is_subclass_of($api_output_class_name, '\MapasCulturais\ApiOutput'))
             return $api_output_class_name::i();
         else
             return null;
-
     }
 
     /**
@@ -1994,15 +2075,15 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\ApiOutput The API Output
      */
-    public function getRegisteredApiOutputById($api_output_id){
+    public function getRegisteredApiOutputById($api_output_id)
+    {
         $api_output_id = strtolower($api_output_id);
-        if(key_exists($api_output_id, $this->_register['api_outputs']) && class_exists($this->_register['api_outputs'][$api_output_id]) && is_subclass_of($this->_register['api_outputs'][$api_output_id], '\MapasCulturais\ApiOutput')){
+        if (key_exists($api_output_id, $this->_register['api_outputs']) && class_exists($this->_register['api_outputs'][$api_output_id]) && is_subclass_of($this->_register['api_outputs'][$api_output_id], '\MapasCulturais\ApiOutput')) {
             $api_output_class_name = $this->_register['api_outputs'][$api_output_id];
             return $api_output_class_name::i();
-        }else{
+        } else {
             return null;
         }
-
     }
 
     /**
@@ -2014,8 +2095,9 @@ class App extends \Slim\Slim{
      *
      * @return sring the API Output id
      */
-    public function getRegisteredApiOutputId($api_output){
-        if(is_object($api_output))
+    public function getRegisteredApiOutputId($api_output)
+    {
+        if (is_object($api_output))
             $api_output = get_class($api_output);
 
         $api_output_id = array_search($api_output, $this->_register['api_outputs']);
@@ -2023,12 +2105,14 @@ class App extends \Slim\Slim{
         return $api_output_id ? $api_output_id : null;
     }
 
-    public function registerAuthProvider($name){
+    public function registerAuthProvider($name)
+    {
         $nextId = count($this->_register['auth_providers']) + 1;
         $this->_register['auth_providers'][$nextId] = strtolower($name);
     }
 
-    public function getRegisteredAuthProviderId($name){
+    public function getRegisteredAuthProviderId($name)
+    {
         return array_search(strtolower($name), $this->_register['auth_providers']);
     }
 
@@ -2042,10 +2126,11 @@ class App extends \Slim\Slim{
      *
      * @throws \Exception
      */
-    public function registerController($id, $controller_class_name, $default_action = 'index', $view_dir = null){
+    public function registerController($id, $controller_class_name, $default_action = 'index', $view_dir = null)
+    {
         $id = strtolower($id);
 
-        if(key_exists($id, $this->_register['controllers']))
+        if (key_exists($id, $this->_register['controllers']))
             throw new \Exception('Controller Id already in use');
 
         $this->_register['controllers-by-class'][$controller_class_name] = $id;
@@ -2055,10 +2140,11 @@ class App extends \Slim\Slim{
         $this->_register['controllers_view_dirs'][$id] = $view_dir ? $view_dir : $id;
     }
 
-    public function getRegisteredControllers($return_controller_object = false){
+    public function getRegisteredControllers($return_controller_object = false)
+    {
         $controllers = $this->_register['controllers'];
-        if($return_controller_object){
-            foreach($controllers as $id => $class){
+        if ($return_controller_object) {
+            foreach ($controllers as $id => $class) {
                 $controllers[$id] = $class::i();
             }
         }
@@ -2077,12 +2163,13 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Controller|null
      */
-    public function getController($id){
+    public function getController($id)
+    {
         $id = strtolower($id);
-        if(key_exists($id, $this->_register['controllers']) && class_exists($this->_register['controllers'][$id])){
+        if (key_exists($id, $this->_register['controllers']) && class_exists($this->_register['controllers'][$id])) {
             $class = $this->_register['controllers'][$id];
             return $class::i($id);
-        }else{
+        } else {
             return null;
         }
     }
@@ -2096,7 +2183,8 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Controller
      */
-    public function controller($id){
+    public function controller($id)
+    {
         return $this->getController($id);
     }
 
@@ -2110,10 +2198,11 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Controller|null The controller
      */
-    public function getControllerByClass($controller_class){
-        if(key_exists($controller_class, $this->_register['controllers-by-class']) && class_exists($controller_class)){
+    public function getControllerByClass($controller_class)
+    {
+        if (key_exists($controller_class, $this->_register['controllers-by-class']) && class_exists($controller_class)) {
             return $controller_class::i($this->_register['controllers-by-class'][$controller_class]);
-        }else{
+        } else {
             return null;
         }
     }
@@ -2131,10 +2220,11 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Controllers\EntityController|null The controller
      */
-    public function getControllerByEntity($entity){
-        if(is_object($entity))
+    public function getControllerByEntity($entity)
+    {
+        if (is_object($entity))
             $entity = $entity->getClassName();
-        else if(is_string($entity) && strpos($entity, '\\') === false)
+        else if (is_string($entity) && strpos($entity, '\\') === false)
             $entity = '\MapasCulturais\Entities\\' . $entity;
 
         $controller_class = preg_replace('#\\\Entities\\\([^\\\]+)$#', '\\Controllers\\\$1', $entity);
@@ -2152,10 +2242,11 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Controller|null The controller
      */
-    public function getControllerIdByEntity($entity){
-        if(is_object($entity))
+    public function getControllerIdByEntity($entity)
+    {
+        if (is_object($entity))
             $entity = $entity->getClassName();
-        else if(is_string($entity) && strpos($entity, '\\') === false)
+        else if (is_string($entity) && strpos($entity, '\\') === false)
             $entity = '\MapasCulturais\Entities\\' . $entity;
 
         $controller_class = preg_replace('#\\\Entities\\\([^\\\]+)$#', '\\Controllers\\\$1', $entity);
@@ -2170,8 +2261,9 @@ class App extends \Slim\Slim{
      *
      * @return string
      */
-    public function getControllerId($object){
-        if(is_object($object))
+    public function getControllerId($object)
+    {
+        if (is_object($object))
             $object = get_class($object);
 
         return array_search($object, $this->_register['controllers']);
@@ -2186,7 +2278,8 @@ class App extends \Slim\Slim{
      *
      * @return string
      */
-    public function controllerId($object){
+    public function controllerId($object)
+    {
         return $this->getControllerId($object);
     }
 
@@ -2198,11 +2291,12 @@ class App extends \Slim\Slim{
      *
      * @return string
      */
-    public function getControllerDefaultAction($controller_id){
+    public function getControllerDefaultAction($controller_id)
+    {
         $controller_id = strtolower($controller_id);
-        if(key_exists($controller_id, $this->_register['controllers_default_actions'])){
+        if (key_exists($controller_id, $this->_register['controllers_default_actions'])) {
             return $this->_register['controllers_default_actions'][$controller_id];
-        }else{
+        } else {
             return null;
         }
     }
@@ -2217,7 +2311,8 @@ class App extends \Slim\Slim{
      *
      * @return string
      */
-    public function controllerDefaultAction($controller_id){
+    public function controllerDefaultAction($controller_id)
+    {
         return $this->getControllerDefaultAction($controller_id);
     }
 
@@ -2226,9 +2321,10 @@ class App extends \Slim\Slim{
      *
      * @param \MapasCulturais\Definitions\EntityTypeGroup $group The Entity Type Group to register.
      */
-    function registerEntityTypeGroup(Definitions\EntityTypeGroup $group){
-        if(!key_exists($group->entity_class, $this->_register['entity_type_groups']))
-                $this->_register['entity_type_groups'][$group->entity_class] = [];
+    function registerEntityTypeGroup(Definitions\EntityTypeGroup $group)
+    {
+        if (!key_exists($group->entity_class, $this->_register['entity_type_groups']))
+            $this->_register['entity_type_groups'][$group->entity_class] = [];
 
         $this->_register['entity_type_groups'][$group->entity_class][] = $group;
     }
@@ -2241,17 +2337,18 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Definitions\EntityTypeGroup|null
      */
-    function getRegisteredEntityTypeGroupByTypeId($entity, $type_id){
-        if(is_object($entity))
+    function getRegisteredEntityTypeGroupByTypeId($entity, $type_id)
+    {
+        if (is_object($entity))
             $entity = $entity->getClassName();
 
-        if(key_exists($entity, $this->_register['entity_type_groups'])){
-            foreach($this->_register['entity_type_groups'][$entity] as $group){
-                if($group->min_id >= $type_id && $group->max_id <= $type_id)
+        if (key_exists($entity, $this->_register['entity_type_groups'])) {
+            foreach ($this->_register['entity_type_groups'][$entity] as $group) {
+                if ($group->min_id >= $type_id && $group->max_id <= $type_id)
                     return $group;
             }
             return null;
-        }else{
+        } else {
             return null;
         }
     }
@@ -2263,13 +2360,14 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Definitions\EntityTypeGroup[]
      */
-    function getRegisteredEntityTypeGroupsByEntity($entity){
-        if(is_object($entity))
+    function getRegisteredEntityTypeGroupsByEntity($entity)
+    {
+        if (is_object($entity))
             $entity = $entity->getClassName();
 
-        if(key_exists($entity, $this->_register['entity_type_groups'])){
+        if (key_exists($entity, $this->_register['entity_type_groups'])) {
             return $this->_register['entity_type_groups'][$entity];
-        }else{
+        } else {
             return [];
         }
     }
@@ -2279,9 +2377,10 @@ class App extends \Slim\Slim{
      *
      * @param \MapasCulturais\Definitions\EntityType $type The Entity Type to register.
      */
-    function registerEntityType(Definitions\EntityType $type){
-        if(!key_exists($type->entity_class, $this->_register['entity_types']))
-                $this->_register['entity_types'][$type->entity_class] = [];
+    function registerEntityType(Definitions\EntityType $type)
+    {
+        if (!key_exists($type->entity_class, $this->_register['entity_types']))
+            $this->_register['entity_types'][$type->entity_class] = [];
 
         $this->_register['entity_types'][$type->entity_class][$type->id] = $type;
     }
@@ -2294,11 +2393,12 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Definitions\EntityType|null
      */
-    function getRegisteredEntityTypeById($entity, $type_id){
-        if(is_object($entity))
+    function getRegisteredEntityTypeById($entity, $type_id)
+    {
+        if (is_object($entity))
             $entity = $entity->getClassName();
 
-        if(isset($this->_register['entity_types'][$entity][$type_id]))
+        if (isset($this->_register['entity_types'][$entity][$type_id]))
             return $this->_register['entity_types'][$entity][$type_id];
         else
             return null;
@@ -2312,7 +2412,8 @@ class App extends \Slim\Slim{
      *
      * @return boolean true if the entity type exists or false otherwise
      */
-    function entityTypeExists($entity, $type_id){
+    function entityTypeExists($entity, $type_id)
+    {
         return !!$this->getRegisteredEntityTypeById($entity, $type_id);
     }
 
@@ -2323,12 +2424,14 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Definitions\EntityType
      */
-    function getRegisteredEntityType(Entity $object){
+    function getRegisteredEntityType(Entity $object)
+    {
         return $this->_register['entity_types'][$object->getClassName()][(string)$object->type] ?? null;
     }
 
-    function getRegisteredEntityTypeByTypeName($entity, string $type_name) {
-        foreach($this->getRegisteredEntityTypes($entity) as $type) {
+    function getRegisteredEntityTypeByTypeName($entity, string $type_name)
+    {
+        foreach ($this->getRegisteredEntityTypes($entity) as $type) {
             if (strtolower($type->name) == trim(strtolower($type_name))) {
                 return $type;
             }
@@ -2344,22 +2447,26 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Definitions\EntityType[]
      */
-    function getRegisteredEntityTypes($entity){
-        if(is_object($entity))
+    function getRegisteredEntityTypes($entity)
+    {
+        if (is_object($entity))
             $entity = $entity->getClassName();
 
         return @$this->_register['entity_types'][$entity];
     }
 
-    function registerRegistrationFieldType(Definitions\RegistrationFieldType $registration_field){
+    function registerRegistrationFieldType(Definitions\RegistrationFieldType $registration_field)
+    {
         $this->_register['registration_fields'][$registration_field->slug] = $registration_field;
     }
 
-    function getRegisteredRegistrationFieldTypes(){
+    function getRegisteredRegistrationFieldTypes()
+    {
         return $this->_register['registration_fields'];
     }
 
-    function getRegisteredRegistrationFieldTypeBySlug($slug) {
+    function getRegisteredRegistrationFieldTypeBySlug($slug)
+    {
         if (isset($this->_register['registration_fields'][$slug])) {
             return $this->_register['registration_fields'][$slug];
         } else {
@@ -2374,41 +2481,42 @@ class App extends \Slim\Slim{
      * @param string $entity_class The Entity Class Name
      * @param int $entity_type_id The Entity Type id
      */
-    function registerMetadata(Definitions\Metadata $metadata, $entity_class, $entity_type_id = null){
-        if($entity_class::usesTypes() && is_null($entity_type_id)){
-            foreach($this->getRegisteredEntityTypes($entity_class) as $type){
-                if($type){
-                   $this->registerMetadata($metadata, $entity_class, $type->id);
+    function registerMetadata(Definitions\Metadata $metadata, $entity_class, $entity_type_id = null)
+    {
+        if ($entity_class::usesTypes() && is_null($entity_type_id)) {
+            foreach ($this->getRegisteredEntityTypes($entity_class) as $type) {
+                if ($type) {
+                    $this->registerMetadata($metadata, $entity_class, $type->id);
                 }
             }
             return;
         }
 
         $key = is_null($entity_type_id) ? $entity_class : $entity_class . ':' . $entity_type_id;
-        if(!key_exists($key, $this->_register['entity_metadata_definitions']))
+        if (!key_exists($key, $this->_register['entity_metadata_definitions']))
             $this->_register['entity_metadata_definitions'][$key] = [];
 
         $this->_register['entity_metadata_definitions'][$key][$metadata->key] = $metadata;
 
-        if($entity_type_id){
-            if(!key_exists($entity_class, $this->_register['entity_metadata_definitions']))
+        if ($entity_type_id) {
+            if (!key_exists($entity_class, $this->_register['entity_metadata_definitions']))
                 $this->_register['entity_metadata_definitions'][$entity_class] = [];
 
             $this->_register['entity_metadata_definitions'][$entity_class][$metadata->key] = $metadata;
         }
     }
 
-    function unregisterEntityMetadata($entity_class, $key = null){
-        foreach($this->_register['entity_metadata_definitions'] as $k => $metadata){
-            if($k === $entity_class || strpos($k . ':', $entity_class) === 0){
-                if($key){
+    function unregisterEntityMetadata($entity_class, $key = null)
+    {
+        foreach ($this->_register['entity_metadata_definitions'] as $k => $metadata) {
+            if ($k === $entity_class || strpos($k . ':', $entity_class) === 0) {
+                if ($key) {
                     unset($this->_register['entity_metadata_definitions'][$k][$key]);
                 } else {
                     $this->_register['entity_metadata_definitions'][$k] = [];
                 }
             }
         }
-
     }
 
     /**
@@ -2420,8 +2528,9 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Definitions\Metadata[]
      */
-    function getRegisteredMetadata($entity, $type = null){
-        if(is_object($entity))
+    function getRegisteredMetadata($entity, $type = null)
+    {
+        if (is_object($entity))
             $entity = $entity->getClassName();
 
         $key = $entity::usesTypes() && $type ? "{$entity}:{$type}" : $entity;
@@ -2435,12 +2544,12 @@ class App extends \Slim\Slim{
      * @param int $type
      * @return \MapasCulturais\Definitions\Metadata
      */
-    function getRegisteredMetadataByMetakey($metakey, $entity, $type = null){
-        if(is_object($entity))
+    function getRegisteredMetadataByMetakey($metakey, $entity, $type = null)
+    {
+        if (is_object($entity))
             $entity = $entity->getClassName();
         $metas = $this->getRegisteredMetadata($entity, $type);
         return key_exists($metakey, $metas) ? $metas[$metakey] : null;
-
     }
 
     /**
@@ -2449,9 +2558,10 @@ class App extends \Slim\Slim{
      * @param string $controller_id The id of the controller.
      * @param \MapasCulturais\Definitions\FileGroup $group The group to register
      */
-    function registerFileGroup($controller_id, Definitions\FileGroup $group){
+    function registerFileGroup($controller_id, Definitions\FileGroup $group)
+    {
         $controller_id = strtolower($controller_id);
-        if(!key_exists($controller_id, $this->_register['file_groups']))
+        if (!key_exists($controller_id, $this->_register['file_groups']))
             $this->_register['file_groups'][$controller_id] = [];
 
         $this->_register['file_groups'][$controller_id][$group->name] = $group;
@@ -2467,21 +2577,22 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Definitions\FileGroup|null The File Group Definition
      */
-    function getRegisteredFileGroup($controller_id, $group_name){
-        if($controller_id && $group_name && key_exists($controller_id, $this->_register['file_groups']) && key_exists($group_name, $this->_register['file_groups'][$controller_id]))
+    function getRegisteredFileGroup($controller_id, $group_name)
+    {
+        if ($controller_id && $group_name && key_exists($controller_id, $this->_register['file_groups']) && key_exists($group_name, $this->_register['file_groups'][$controller_id]))
             return $this->_register['file_groups'][$controller_id][$group_name];
         else
             return null;
     }
 
-    function getRegisteredFileGroupsByEntity($entity){
-        if(is_object($entity))
+    function getRegisteredFileGroupsByEntity($entity)
+    {
+        if (is_object($entity))
             $entity = $entity->getClassName();
 
         $controller_id = $this->getControllerIdByEntity($entity);
 
         return $controller_id && key_exists($controller_id, $this->_register['file_groups']) ? $this->_register['file_groups'][$controller_id] : [];
-
     }
 
     /**
@@ -2492,7 +2603,8 @@ class App extends \Slim\Slim{
      * @param type $name
      * @param type $transformation
      */
-    function registerImageTransformation($name, $transformation){
+    function registerImageTransformation($name, $transformation)
+    {
         $this->_register['image_transformations'][$name] = trim($transformation);
     }
 
@@ -2503,10 +2615,11 @@ class App extends \Slim\Slim{
      *
      * @return string The Transformation Expression
      */
-    function getRegisteredImageTransformation($name){
+    function getRegisteredImageTransformation($name)
+    {
         return key_exists($name, $this->_register['image_transformations']) ?
-                $this->_register['image_transformations'][$name] :
-                null;
+            $this->_register['image_transformations'][$name] :
+            null;
     }
 
     /**
@@ -2515,8 +2628,9 @@ class App extends \Slim\Slim{
      * @param string $controller_id The id of the controller.
      * @param \MapasCulturais\Definitions\MetaListGroup $group The group to register
      */
-    function registerMetaListGroup($controller_id, Definitions\MetaListGroup $group){
-        if(!key_exists($controller_id, $this->_register['metalist_groups']))
+    function registerMetaListGroup($controller_id, Definitions\MetaListGroup $group)
+    {
+        if (!key_exists($controller_id, $this->_register['metalist_groups']))
             $this->_register['metalist_groups'][$controller_id] = [];
 
         $this->_register['metalist_groups'][$controller_id][$group->name] = $group;
@@ -2532,15 +2646,17 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Definitions\MetaListGroup|null The MetaList Group Definition
      */
-    function getRegisteredMetaListGroup($controller_id, $group_name){
-        if(key_exists($controller_id, $this->_register['metalist_groups']) && key_exists($group_name, $this->_register['metalist_groups'][$controller_id]))
+    function getRegisteredMetaListGroup($controller_id, $group_name)
+    {
+        if (key_exists($controller_id, $this->_register['metalist_groups']) && key_exists($group_name, $this->_register['metalist_groups'][$controller_id]))
             return $this->_register['metalist_groups'][$controller_id][$group_name];
         else
             return null;
     }
 
-    function getRegisteredMetaListGroupsByEntity($entity){
-        if(is_object($entity))
+    function getRegisteredMetaListGroupsByEntity($entity)
+    {
+        if (is_object($entity))
             $entity = $entity->getClassName();
 
         $controller_id = $this->getControllerIdByEntity($entity);
@@ -2554,9 +2670,10 @@ class App extends \Slim\Slim{
      * @param string $entity_class The entity class name to register.
      * @param \MapasCulturais\Definitions\Taxonomy $definition
      */
-    function registerTaxonomy($entity_class, Definitions\Taxonomy $definition){
-        if(!key_exists($entity_class, $this->_register['taxonomies']['by-entity']))
-                $this->_register['taxonomies']['by-entity'][$entity_class] = [];
+    function registerTaxonomy($entity_class, Definitions\Taxonomy $definition)
+    {
+        if (!key_exists($entity_class, $this->_register['taxonomies']['by-entity']))
+            $this->_register['taxonomies']['by-entity'][$entity_class] = [];
 
         $this->_register['taxonomies']['by-entity'][$entity_class][$definition->slug] = $definition;
 
@@ -2571,7 +2688,8 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Definitions\Taxonomy The Taxonomy Definition
      */
-    function getRegisteredTaxonomyById($taxonomy_id){
+    function getRegisteredTaxonomyById($taxonomy_id)
+    {
         return key_exists($taxonomy_id, $this->_register['taxonomies']['by-id']) ? $this->_register['taxonomies']['by-id'][$taxonomy_id] : null;
     }
 
@@ -2582,7 +2700,8 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Definitions\Taxonomy The Taxonomy Definition
      */
-    function getRegisteredTaxonomyBySlug($taxonomy_slug){
+    function getRegisteredTaxonomyBySlug($taxonomy_slug)
+    {
         return key_exists($taxonomy_slug, $this->_register['taxonomies']['by-slug']) ? $this->_register['taxonomies']['by-slug'][$taxonomy_slug] : null;
     }
 
@@ -2595,13 +2714,14 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Definitions\Taxonomy[] The Taxonomy Definitions objects or an empty array
      */
-    function getRegisteredTaxonomies($entity = null){
-        if(is_object($entity))
+    function getRegisteredTaxonomies($entity = null)
+    {
+        if (is_object($entity))
             $entity = $entity->getClassName();
 
-        if(is_null($entity)){
+        if (is_null($entity)) {
             return $this->_register['taxonomies']['by-entity'];
-        }else{
+        } else {
             return key_exists($entity, $this->_register['taxonomies']['by-entity']) ? $this->_register['taxonomies']['by-entity'][$entity] : [];
         }
     }
@@ -2616,12 +2736,13 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Definitions\Taxonomy The Taxonomy Definition.
      */
-    function getRegisteredTaxonomy($entity, $taxonomy_slug){
-        if(is_object($entity))
+    function getRegisteredTaxonomy($entity, $taxonomy_slug)
+    {
+        if (is_object($entity))
             $entity = $entity->getClassName();
 
         return key_exists($entity, $this->_register['taxonomies']['by-entity']) && key_exists($taxonomy_slug, $this->_register['taxonomies']['by-entity'][$entity]) ?
-                    $this->_register['taxonomies']['by-entity'][$entity][$taxonomy_slug] : null;
+            $this->_register['taxonomies']['by-entity'][$entity][$taxonomy_slug] : null;
     }
 
 
@@ -2629,7 +2750,8 @@ class App extends \Slim\Slim{
      * Register an Evaluation Method
      * @param \MapasCulturais\Definitions\EvaluationMethod $def
      */
-    function registerEvaluationMethod(Definitions\EvaluationMethod $def){
+    function registerEvaluationMethod(Definitions\EvaluationMethod $def)
+    {
         $this->_register['evaluation_method'][$def->slug] = $def;
     }
 
@@ -2638,7 +2760,8 @@ class App extends \Slim\Slim{
      * Returns the evaluation methods definitions
      * @return \MapasCulturais\Definitions\EvaluationMethod[];
      */
-    function getRegisteredEvaluationMethods(){
+    function getRegisteredEvaluationMethods()
+    {
         return $this->_register['evaluation_method'];
     }
 
@@ -2649,8 +2772,9 @@ class App extends \Slim\Slim{
      *
      * @return \MapasCulturais\Definitions\EvaluationMethod;
      */
-    function getRegisteredEvaluationMethodBySlug($slug){
-        if(isset($this->_register['evaluation_method'][$slug])){
+    function getRegisteredEvaluationMethodBySlug($slug)
+    {
+        if (isset($this->_register['evaluation_method'][$slug])) {
             return $this->_register['evaluation_method'][$slug];
         } else {
             return null;
@@ -2661,7 +2785,8 @@ class App extends \Slim\Slim{
      * Utils
      ************/
 
-    function slugify($text) {
+    function slugify($text)
+    {
         // replace non letter or digits by -
         $text = preg_replace('~[^\pL\d]+~u', '-', $text);
 
@@ -2688,10 +2813,11 @@ class App extends \Slim\Slim{
     }
 
 
-    function detachRS($rs){
+    function detachRS($rs)
+    {
         $em = $this->_em;
 
-        foreach($rs as $r){
+        foreach ($rs as $r) {
             $em->detach($r);
         }
     }
@@ -2700,8 +2826,9 @@ class App extends \Slim\Slim{
      * Utils
      **************/
 
-    function getManagedEntity(Entity $entity){
-        if($entity->getEntityState() > 2){
+    function getManagedEntity(Entity $entity)
+    {
+        if ($entity->getEntityState() > 2) {
             $entity = App::i()->repo($entity->getClassName())->find($entity->id);
             $entity->refresh();
         }
@@ -2714,7 +2841,8 @@ class App extends \Slim\Slim{
      *
      * @return \Swift_Mailer Mailer object
      */
-    function getMailer() {
+    function getMailer()
+    {
         $transport = [];
 
         // server
@@ -2734,12 +2862,13 @@ class App extends \Slim\Slim{
             $transport = \Swift_SmtpTransport::newInstance($server, $port, $protocol);
 
             // Maybe add username and password
-            if (isset($this->_config['mailer.user']) && !empty($this->_config['mailer.user']) &&
-                isset($this->_config['mailer.psw']) && !empty($this->_config['mailer.psw']) ) {
+            if (
+                isset($this->_config['mailer.user']) && !empty($this->_config['mailer.user']) &&
+                isset($this->_config['mailer.psw']) && !empty($this->_config['mailer.psw'])
+            ) {
 
                 $transport->setUsername($this->_config['mailer.user'])->setPassword($this->_config['mailer.psw']);
             }
-
         } elseif ($transport_type == 'sendmail' && false !== $server) {
             $transport = \Swift_SendmailTransport::newInstance($server);
         } elseif ($transport_type == 'mail') {
@@ -2758,14 +2887,15 @@ class App extends \Slim\Slim{
      * @param array $args
      * @return \Swift_Message
      */
-    function createMailMessage(array $args = []){
+    function createMailMessage(array $args = [])
+    {
         $message = \Swift_Message::newInstance();
 
-        if($this->_config['mailer.from']){
+        if ($this->_config['mailer.from']) {
             $message->setFrom($this->_config['mailer.from']);
         }
 
-        if($this->_config['mailer.alwaysTo']){
+        if ($this->_config['mailer.alwaysTo']) {
             $message->setTo($this->_config['mailer.alwaysTo']);
         }
 
@@ -2774,8 +2904,8 @@ class App extends \Slim\Slim{
         $type->setParameter('charset', 'utf-8');
 
         $original = [];
-        foreach($args as $key => $value){
-            if(in_array(strtolower($key), ['to', 'cc', 'bcc']) && $this->_config['mailer.alwaysTo']){
+        foreach ($args as $key => $value) {
+            if (in_array(strtolower($key), ['to', 'cc', 'bcc']) && $this->_config['mailer.alwaysTo']) {
                 $original[$key] = $value;
                 continue;
             }
@@ -2783,14 +2913,14 @@ class App extends \Slim\Slim{
             $key = ucfirst($key);
             $method_name = 'set' . $key;
 
-            if(method_exists($message, $method_name)){
+            if (method_exists($message, $method_name)) {
                 $message->$method_name($value);
             }
         }
 
-        if($this->_config['mailer.alwaysTo']){
-            foreach($original as $key => $val){
-                if(is_array($val)){
+        if ($this->_config['mailer.alwaysTo']) {
+            foreach ($original as $key => $val) {
+                if (is_array($val)) {
                     $val = implode(', ', $val);
                 }
                 $message->setBody("<strong>ORIGINALMENTE $key:</strong> $val <br>\n" . $message->getBody());
@@ -2800,7 +2930,8 @@ class App extends \Slim\Slim{
         return $message;
     }
 
-    function sendMailMessage(\Swift_Message $message){
+    function sendMailMessage(\Swift_Message $message)
+    {
         $failures = [];
         $mailer = $this->getMailer();
 
@@ -2808,21 +2939,23 @@ class App extends \Slim\Slim{
             return false;
 
         try {
-            $mailer->send($message,$failures);
+            $mailer->send($message, $failures);
             return true;
-        } catch(\Swift_TransportException $exception) {
+        } catch (\Swift_TransportException $exception) {
             App::i()->log->info('Swift Mailer error: ' . $exception->getMessage());
             return false;
         }
     }
 
-    function createAndSendMailMessage(array $args = []){
+    function createAndSendMailMessage(array $args = [])
+    {
         $message = $this->createMailMessage($args);
         return $this->sendMailMessage($message);
     }
 
-    function renderMustacheTemplate($template,$templateData) {
-        if(!is_array($templateData) && !is_object($templateData)) {
+    function renderMustacheTemplate($template, $templateData)
+    {
+        if (!is_array($templateData) && !is_object($templateData)) {
             throw new \Exception('Template data not object or array');
         }
 
@@ -2833,20 +2966,20 @@ class App extends \Slim\Slim{
         $templateData->siteOwner = $this->view->dict('site: owner', false);
         $templateData->baseUrl = $this->getBaseUrl();
 
-        if(!($footer_name = $this->view->resolveFileName('templates/' . i::get_locale(), '_footer.html'))) {
-            if(!($footer_name = $this->view->resolveFileName('templates/pt_BR', '_footer.html'))) {
+        if (!($footer_name = $this->view->resolveFileName('templates/' . i::get_locale(), '_footer.html'))) {
+            if (!($footer_name = $this->view->resolveFileName('templates/pt_BR', '_footer.html'))) {
                 throw new \Exception('Email footer template not found');
             }
         }
 
-        if(!($header_name = $this->view->resolveFileName('templates/' . i::get_locale(), '_header.html'))) {
-            if(!($header_name = $this->view->resolveFileName('templates/pt_BR', '_header.html'))) {
+        if (!($header_name = $this->view->resolveFileName('templates/' . i::get_locale(), '_header.html'))) {
+            if (!($header_name = $this->view->resolveFileName('templates/pt_BR', '_header.html'))) {
                 throw new \Exception('Email header template not found');
             }
         }
 
-        if(!($file_name = $this->view->resolveFileName('templates/' . i::get_locale(), $template))) {
-            if(!($file_name = $this->view->resolveFileName('templates/pt_BR', $template))) {
+        if (!($file_name = $this->view->resolveFileName('templates/' . i::get_locale(), $template))) {
+            if (!($file_name = $this->view->resolveFileName('templates/pt_BR', $template))) {
                 throw new \Exception('Email Template undefined');
             }
         }
@@ -2860,7 +2993,7 @@ class App extends \Slim\Slim{
 
         $footerData = $templateData;
         $this->applyHookBoundTo($this, "mustacheTemplate({$template}).footerData", [&$footerData]);
-        $_footer = $mustache->render(file_get_contents($footer_name),$footerData);
+        $_footer = $mustache->render(file_get_contents($footer_name), $footerData);
         $this->applyHookBoundTo($this, "mustacheTemplate({$template}).footer", [&$_footer]);
 
         $templateData->_footer = $_footer;
@@ -2872,10 +3005,11 @@ class App extends \Slim\Slim{
         return $content;
     }
 
-    function renderMailerTemplate($slug, $templateData = []) {
-        if(array_key_exists($slug,$this->_config['mailer.templates'])) {
+    function renderMailerTemplate($slug, $templateData = [])
+    {
+        if (array_key_exists($slug, $this->_config['mailer.templates'])) {
             $message = $this->_config['mailer.templates'][$slug];
-            $message['body'] = $this->renderMustacheTemplate($message['template'],$templateData);
+            $message['body'] = $this->renderMustacheTemplate($message['template'], $templateData);
             return $message;
         } else {
             throw new Exceptions\MailTemplateNotFound($slug);
@@ -2890,11 +3024,13 @@ class App extends \Slim\Slim{
      *
      *
      */
-    static function getCurrentLCode(){
+    static function getCurrentLCode()
+    {
         return \MapasCulturais\i::get_locale();
     }
 
-    static function getTranslations($lcode, $domain = null) {
+    static function getTranslations($lcode, $domain = null)
+    {
         $app = App::i();
         $log = key_exists('app.log.translations', $app->_config) && $app->_config['app.log.translations'];
 
@@ -2906,7 +3042,7 @@ class App extends \Slim\Slim{
             return $app->cache->fetch($cache_id);
         }
 
-        $translations_filename = APPLICATION_PATH . ( $domain ? "translations/{$domain}/{$lcode}.php" : "translations/{$lcode}.php" );
+        $translations_filename = APPLICATION_PATH . ($domain ? "translations/{$domain}/{$lcode}.php" : "translations/{$lcode}.php");
 
         if (file_exists($translations_filename)) {
             $translations = include $translations_filename;
@@ -2924,35 +3060,36 @@ class App extends \Slim\Slim{
         return $translations;
     }
 
-    static function txt($message, $domain = null, $lcode = null){
+    static function txt($message, $domain = null, $lcode = null)
+    {
         $app = App::i();
         $message = trim($message);
 
-        if(is_null($lcode)){
+        if (is_null($lcode)) {
             $lcode = $app->getCurrentLCode();
         }
 
         $translations = self::getTranslations($lcode, $domain);
-        $backtrace = debug_backtrace(3,1)[0];
-        $file = str_replace(APPLICATION_PATH,'',$backtrace['file']);
+        $backtrace = debug_backtrace(3, 1)[0];
+        $file = str_replace(APPLICATION_PATH, '', $backtrace['file']);
 
         $log = key_exists('app.log.translations', $app->_config) && $app->_config['app.log.translations'];
 
-        if(key_exists($file, $translations) && is_array($translations[$file]) && key_exists($message, $translations[$file])){
+        if (key_exists($file, $translations) && is_array($translations[$file]) && key_exists($message, $translations[$file])) {
             $message = $translations[$file][$message];
-        }elseif(key_exists($message, $translations)){
+        } elseif (key_exists($message, $translations)) {
             $message = $translations[$message];
-        }elseif($log){
+        } elseif ($log) {
             $app->applyHook("txt({$domain}.{$lcode}).missingTranslation");
-            $app->log->warn ("TXT > missing '$lcode' translation for message '$message' in domain '$domain'");
+            $app->log->warn("TXT > missing '$lcode' translation for message '$message' in domain '$domain'");
         }
 
 
         return $message;
-
     }
 
-    static function txts($singular_message, $plural_message, $n, $domain = null) {
+    static function txts($singular_message, $plural_message, $n, $domain = null)
+    {
         if ($n === 1) {
             return self::txt($singular_message, $domain);
         } else {
@@ -2960,7 +3097,8 @@ class App extends \Slim\Slim{
         }
     }
 
-    function getReadableName($id) {
+    function getReadableName($id)
+    {
         if (array_key_exists($id, $this->_config['routes']['readableNames'])) {
             return $this->_config['routes']['readableNames'][$id];
         }
