@@ -9,7 +9,9 @@ use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\AnnotationRegistry;
 
 use Acelaya\Doctrine\Type\PhpEnumType;
+use DateTime;
 use Exception;
+use MapasCulturais\Entities\Job;
 use MapasCulturais\Entities\PermissionCachePending;
 use MapasCulturais\Entities\User;
 
@@ -95,7 +97,7 @@ class App extends \Slim\Slim
 
     /**
      * The Route Manager.
-     * @var \MapasCulturais\RouteManager
+     * @var \MapasCulturais\RoutesManager
      */
     protected $_routesManager = null;
 
@@ -142,7 +144,9 @@ class App extends \Slim\Slim
         'registration_agent_relations' => [],
         'registration_fields' => [],
         'evaluation_method' => [],
-        'roles' => []
+        'roles' => [],
+        'chat_thread_types' => [],
+        'job_types' => [],
     ];
 
     protected $_registerLocked = true;
@@ -199,24 +203,15 @@ class App extends \Slim\Slim
         if ($config['slim.debug'])
             error_reporting(E_ALL ^ E_STRICT);
 
-
         if ($config['app.mode'] == APPMODE_PRODUCTION)
             session_save_path(SESSIONS_SAVE_PATH);
-        
+
         session_start();
 
         session_regenerate_id();
 
 
-        if($config['app.offline']){
-
-
-        session_save_path(SESSIONS_SAVE_PATH);
-
-        session_start();
-
         if ($config['app.offline']) {
-
             $bypass_callable = $config['app.offlineBypassFunction'];
 
             if (php_sapi_name() !== "cli" && (!is_callable($bypass_callable) || !$bypass_callable())) {
@@ -268,7 +263,7 @@ class App extends \Slim\Slim
             }
         }
 
-        spl_autoload_register(function ($class) use ($config, $available_modules) {
+        spl_autoload_register(function ($class) use ($config) {
             $cache_id = "AUTOLOAD_CLASS:$class";
             if ($config['app.useRegisteredAutoloadCache'] && $this->_mscache->contains($cache_id)) {
                 $path = $this->_mscache->fetch($cache_id);
@@ -280,10 +275,23 @@ class App extends \Slim\Slim
 
             $namespaces['MapasCulturais\\DoctrineProxies'] = DOCTRINE_PROXIES_PATH;
 
+            $subfolders = [
+                'Controllers',
+                'Entities',
+                'Repositories'
+            ];
+
             foreach ($config['plugins'] as $plugin) {
-                $dir = isset($plugin['path']) ? $plugin['path'] : PLUGINS_PATH . $plugin['namespace'];
-                if (!isset($namespaces[$plugin['namespace']])) {
-                    $namespaces[$plugin['namespace']] = $dir;
+                $namespace = $plugin['namespace'];
+                $dir = isset($plugin['path']) ? $plugin['path'] : PLUGINS_PATH . $namespace;
+                if (!isset($namespaces[$namespace])) {
+                    $namespaces[$namespace] = $dir;
+                }
+
+                foreach ($subfolders as $subfolder) {
+                    if (!isset($namespaces[$namespace . '\\' . $subfolder])) {
+                        $namespaces[$namespace . '\\' . $subfolder] = $dir . '/' . $subfolder;
+                    }
                 }
             }
 
@@ -396,8 +404,8 @@ class App extends \Slim\Slim
 
 
         PhpEnumType::registerEnumTypes([
-            'object_type' => DoctrineEnumTypes\ObjectType::class,
-            'permission_action' => DoctrineEnumTypes\PermissionAction::class
+            DoctrineEnumTypes\ObjectType::getTypeName() => DoctrineEnumTypes\ObjectType::class,
+            DoctrineEnumTypes\PermissionAction::getTypeName() => DoctrineEnumTypes\PermissionAction::class
         ]);
 
         $platform = $this->_em->getConnection()->getDatabasePlatform();
@@ -482,6 +490,8 @@ class App extends \Slim\Slim
                 $this->_plugins[$slug] = new $plugin_class_name($plugin_config);
             }
         }
+
+        $this->applyHookBoundTo($this, 'app.init:before');
 
         $config = $this->_config;
 
@@ -575,7 +585,7 @@ class App extends \Slim\Slim
         if (defined('DB_UPDATES_FILE') && file_exists(DB_UPDATES_FILE))
             $this->_dbUpdates();
 
-
+        $this->applyHookBoundTo($this, 'app.init:after');
         return $this;
     }
 
@@ -595,7 +605,7 @@ class App extends \Slim\Slim
 
     private function getVersionFile()
     {
-        $version = \MapasCulturais\i::_e("versão indefinida");
+        $version = \MapasCulturais\i::__("versão indefinida");
         $path = getcwd() . "/../version.txt";
         if (file_exists($path) && $versionFile = fopen($path, "r")) {
             $version = fgets($versionFile);
@@ -731,6 +741,8 @@ class App extends \Slim\Slim
 
         $this->_registered = true;
 
+        $this->applyHookBoundTo($this, 'app.register:before');
+
         // get types and metadata configurations
         if ($theme_space_types = $this->view->resolveFilename('', 'space-types.php')) {
             $space_types = include $theme_space_types;
@@ -835,6 +847,10 @@ class App extends \Slim\Slim
         // history controller
         $this->registerController('entityRevision',    'MapasCulturais\Controllers\EntityRevision');
         $this->registerController('permissionCache',   'MapasCulturais\Controllers\PermissionCache');
+
+        // chat controllers
+        $this->registerController('chatThread', 'MapasCulturais\Controllers\ChatThread');
+        $this->registerController('chatMessage', 'MapasCulturais\Controllers\ChatMessage');
 
         $this->registerApiOutput('MapasCulturais\ApiOutputs\Json');
         $this->registerApiOutput('MapasCulturais\ApiOutputs\Html');
@@ -1027,6 +1043,9 @@ class App extends \Slim\Slim
         $this->registerMetaListGroup('seal', $metalist_groups['links']);
         $this->registerMetaListGroup('seal', $metalist_groups['videos']);
 
+        // register job types
+        $this->registerJobType(new JobTypes\ReopenEvaluations(JobTypes\ReopenEvaluations::SLUG));
+
         // register space types and spaces metadata
         foreach ($space_types['items'] as $group_name => $group_config) {
             $entity_class = 'MapasCulturais\Entities\Space';
@@ -1040,7 +1059,8 @@ class App extends \Slim\Slim
                 $group->registerType($type);
                 $this->registerEntityType($type);
 
-                $type_meta = $type_config['metadata'] = key_exists('metadata', $type_config) && is_array($type_config['metadata']) ? $type_config['metadata'] : [];
+                $type_meta = key_exists('metadata', $type_config) && is_array($type_config['metadata']) ? $type_config['metadata'] : [];
+                $type_config['metadata'] = $type_meta;
 
                 // add group metadata to space type
                 if (key_exists('metadata', $group_config))
@@ -1067,7 +1087,9 @@ class App extends \Slim\Slim
             $type = new Definitions\EntityType($entity_class, $type_id, $type_config['name']);
 
             $this->registerEntityType($type);
-            $type_config['metadata'] = key_exists('metadata', $type_config) && is_array($type_config['metadata']) ? $type_config['metadata'] : [];
+
+            $type_meta = key_exists('metadata', $type_config) && is_array($type_config['metadata']) ? $type_config['metadata'] : [];
+            $type_config['metadata'] = $type_meta;
 
             // add agents metadata definition to agent type
             foreach ($agents_meta as $meta_key => $meta_config)
@@ -1088,7 +1110,9 @@ class App extends \Slim\Slim
             $type = new Definitions\EntityType($entity_class, $type_id, $type_config['name']);
 
             $this->registerEntityType($type);
-            $type_config['metadata'] = key_exists('metadata', $type_config) && is_array($type_config['metadata']) ? $type_config['metadata'] : [];
+
+            $type_meta = key_exists('metadata', $type_config) && is_array($type_config['metadata']) ? $type_config['metadata'] : [];
+            $type_config['metadata'] = $type_meta;
 
             // add events metadata definition to event type
             foreach ($event_meta as $meta_key => $meta_config)
@@ -1108,7 +1132,8 @@ class App extends \Slim\Slim
             $type = new Definitions\EntityType($entity_class, $type_id, $type_config['name']);
 
             $this->registerEntityType($type);
-            $type_config['metadata'] = key_exists('metadata', $type_config) && is_array($type_config['metadata']) ? $type_config['metadata'] : [];
+            $type_meta = key_exists('metadata', $type_config) && is_array($type_config['metadata']) ? $type_config['metadata'] : [];
+            $type_config['metadata'] = $type_meta;
 
             // add projects metadata definition to project type
             foreach ($projects_meta as $meta_key => $meta_config)
@@ -1128,7 +1153,8 @@ class App extends \Slim\Slim
             $type = new Definitions\EntityType($entity_class, $type_id, $type_config['name']);
 
             $this->registerEntityType($type);
-            $type_config['metadata'] = key_exists('metadata', $type_config) && is_array($type_config['metadata']) ? $type_config['metadata'] : [];
+            $type_meta = key_exists('metadata', $type_config) && is_array($type_config['metadata']) ? $type_config['metadata'] : [];
+            $type_config['metadata'] = $type_meta;
 
             // add opportunities metadata definition to opportunity type
             foreach ($opportunities_meta as $meta_key => $meta_config)
@@ -1156,6 +1182,9 @@ class App extends \Slim\Slim
         foreach ($seal_types['items'] as $type_id => $type_config) {
             $type = new Definitions\EntityType($entity_class, $type_id, $type_config['name']);
             $this->registerEntityType($type);
+
+            $type_meta = key_exists('metadata', $type_config) && is_array($type_config['metadata']) ? $type_config['metadata'] : [];
+            $type_config['metadata'] = $type_meta;
 
             // add projects metadata definition to project type
             foreach ($seals_meta as $meta_key => $meta_config)
@@ -1210,6 +1239,7 @@ class App extends \Slim\Slim
         }
 
         $this->applyHookBoundTo($this, 'app.register', [&$this->_register]);
+        $this->applyHookBoundTo($this, 'app.register:after');
     }
 
 
@@ -1477,16 +1507,16 @@ class App extends \Slim\Slim
         $lines = file($filename);
         $line = trim($lines[$fileline - 1]);
 
-        $this->log->debug("hook >> $name (\033[33m$filename:$fileline\033[0m)");
+        $this->log->debug("hook >> \033[37m$name \033[0m(\033[33m$filename:$fileline\033[0m)");
         $this->log->debug("     >> \033[32m$line\033[0m\n");
     }
+
+    protected $hookStack = [];
 
     /**
      * Invoke hook
      * @param  string   $name       The hook name
      * @param  mixed    $hookArgs   (Optional) Argument for hooked functions
-     * 
-     * @return callable[]
      */
     function applyHook($name, $hookArg = null)
     {
@@ -1502,15 +1532,18 @@ class App extends \Slim\Slim
             }
         }
 
+        $this->hookStack[] = (object) [
+            'name' => $name,
+            'args' => $hookArg,
+            'bound' => false,
+        ];
+
         $callables = $this->_getHookCallables($name);
         foreach ($callables as $callable) {
             call_user_func_array($callable, $hookArg);
         }
 
-
         array_pop($this->hookStack);
-
-        return $callables;
     }
 
     /**
@@ -1519,8 +1552,6 @@ class App extends \Slim\Slim
      * @param  object $target_object Object to bind hook
      * @param  string   $name       The hook name
      * @param  mixed    $hookArgs   (Optional) Argument for hooked functions
-     * 
-     * @return callable[]
      */
     function applyHookBoundTo($target_object, $name, $hookArg = null)
     {
@@ -1536,16 +1567,19 @@ class App extends \Slim\Slim
             }
         }
 
+        $this->hookStack[] = (object) [
+            'name' => $name,
+            'args' => $hookArg,
+            'bound' => false,
+        ];
+
         $callables = $this->_getHookCallables($name);
         foreach ($callables as $callable) {
             $callable = \Closure::bind($callable, $target_object);
             call_user_func_array($callable, $hookArg);
         }
 
-
         array_pop($this->hookStack);
-
-        return $callables;
     }
 
 
@@ -1621,6 +1655,78 @@ class App extends \Slim\Slim
     }
 
     /**********************************************
+     * Background Jobs
+     **********************************************/
+
+    /**
+     * 
+     * @param string $type_slug 
+     * @param array $data 
+     * @param string $start_string 
+     * @param string $interval_string 
+     * @param int $iterations 
+     * @return Job 
+     * @throws Exception 
+     */
+    public function enqueueJob(string $type_slug, array $data, string $start_string = 'now', string $interval_string = '', int $iterations = 1)
+    {
+        $type = $this->getRegisteredJobType($type_slug);
+
+        if (!$type) {
+            throw new \Exception("invalid job type: {$type_slug}");
+        }
+
+        $id = $type->generateId($data, $start_string, $interval_string, $iterations);
+
+        if ($job = $this->repo('Job')->find($id)) {
+            return $job;
+        }
+
+        $job = new Job($type);
+
+        $job->id = $id;
+
+        $job->iterations = $iterations;
+
+        $job->nextExecutionTimestamp = new DateTime($start_string);
+        $job->intervalString = $interval_string;
+
+        foreach ($data as $key => $value) {
+            $job->$key = $value;
+        }
+
+        $job->save(true);
+
+        return $job;
+    }
+
+    public function executeJob()
+    {
+        $conn = $this->em->getConnection();
+
+        $job_id = $conn->fetchColumn("
+            SELECT id
+            FROM job
+            WHERE
+                next_execution_timestamp <= now() AND
+                iterations_count < iterations AND
+                status = 0
+            ORDER BY next_execution_timestamp ASC
+            LIMIT 1");
+
+        if ($job_id) {
+            $conn->executeQuery("UPDATE job SET status = 1 WHERE id = '{$job_id}'");
+            $job = $this->repo('Job')->find($job_id);
+
+            $this->disableAccessControl();
+            $this->applyHookBoundTo($this, "app.executeJob:before");
+            $job->execute();
+            $this->applyHookBoundTo($this, "app.executeJob:after");
+            $this->enableAccessControl();
+        }
+    }
+
+    /**********************************************
      * Permissions Cache
      **********************************************/
     private $permissionCachePendingQueue = [];
@@ -1628,7 +1734,8 @@ class App extends \Slim\Slim
     public function enqueueEntityToPCacheRecreation(Entity $entity)
     {
         if (!$entity->__skipQueuingPCacheRecreation) {
-            $this->permissionCachePendingQueue["$entity"] = $entity;
+            $entity_key = $entity->id ? "$entity" : "$entity" . spl_object_id($entity);
+            $this->permissionCachePendingQueue["$entity_key"] = $entity;
         }
     }
 
@@ -1951,6 +2058,32 @@ class App extends \Slim\Slim
      * Register functions
      **********************************************/
 
+    public function registerJobType(Definitions\JobType $definition)
+    {
+        if (key_exists($definition->slug, $this->_register['job_types'])) {
+            throw new \Exception("Job type {$definition->slug} already registered");
+        }
+        $this->_register['job_types'][$definition->slug] = $definition;
+    }
+
+    /**
+     * 
+     * @return Definitions\JobType[]
+     */
+    public function getRegisteredJobTypes()
+    {
+        return $this->_register['job_types'];
+    }
+
+    /**
+     * 
+     * @return Definitions\JobType
+     */
+    public function getRegisteredJobType(string $slug)
+    {
+        return $this->_register['job_types'][$slug] ?? null;
+    }
+
     /**
      * Register a new role
      *
@@ -2039,6 +2172,25 @@ class App extends \Slim\Slim
         }
     }
 
+    function registerChatThreadType(Definitions\ChatThreadType $definition)
+    {
+        if (isset($this->_register['chat_thread_types'][$definition->slug])) {
+            throw new \Exception("Attempting to re-register " .
+                "{$definition->slug}.");
+        }
+        $this->_register['chat_thread_types'][$definition->slug] = $definition;
+        return;
+    }
+
+    function getRegisteredChatThreadTypes(): array
+    {
+        return $this->_register['chat_thread_types'];
+    }
+
+    function getRegisteredChatThreadType($slug)
+    {
+        return ($this->_register['chat_thread_types'][$slug] ?? null);
+    }
 
     /**
      * Register a API Output Class
@@ -2772,9 +2924,22 @@ class App extends \Slim\Slim
      * Returns the evaluation methods definitions
      * @return \MapasCulturais\Definitions\EvaluationMethod[];
      */
-    function getRegisteredEvaluationMethods()
+    function getRegisteredEvaluationMethods($return_internal = false)
     {
-        return $this->_register['evaluation_method'];
+        return array_filter($this->_register['evaluation_method'], function (Definitions\EvaluationMethod $em) use ($return_internal) {
+            if ($return_internal || !$em->internal) {
+                return $em;
+            }
+        });
+    }
+
+    /**
+     * Unregister an Evaluation Method
+     * @param \MapasCulturais\Definitions\EvaluationMethod $def
+     */
+    function unregisterEvaluationMethod($slug)
+    {
+        unset($this->_register['evaluation_method'][$slug]);
     }
 
     /**
