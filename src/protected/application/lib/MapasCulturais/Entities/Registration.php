@@ -4,6 +4,7 @@ namespace MapasCulturais\Entities;
 use Doctrine\ORM\Mapping as ORM;
 use MapasCulturais\Traits;
 use MapasCulturais\App;
+use MapasCulturais\i;
 
 /**
  * Registration
@@ -589,6 +590,24 @@ class Registration extends \MapasCulturais\Entity
         $app->applyHookBoundTo($this, "entity({$this->hookClassPath}).setAgentsSealRelation:after", [&$opportunityMetadataSeals, &$seal_relations]);
     }
 
+    /**
+     * Retorna array com os nomes dos status
+     * 
+     * @return array
+     */
+    
+    protected static function _getStatusesNames() {
+        $statuses = parent::_getStatusesNames();
+
+        $statuses[self::STATUS_SENT] = i::__('Pendente');
+        $statuses[self::STATUS_INVALID] = i::__('Inválida');
+        $statuses[self::STATUS_NOTAPPROVED] = i::__('Não selecionada');
+        $statuses[self::STATUS_WAITLIST] = i::__('Suplente');
+        $statuses[self::STATUS_APPROVED] = i::__('Selecionada');
+
+        return $statuses;
+    }
+
     function setStatusToDraft(){
         $this->_setStatusTo(self::STATUS_DRAFT);
         App::i()->applyHookBoundTo($this, 'entity(Registration).status(draft)');
@@ -658,7 +677,7 @@ class Registration extends \MapasCulturais\Entity
 
         $app->enableAccessControl();
         
-        $app->enqueueEntityToPCacheRecreation($this->opportunity);
+        // $app->enqueueEntityToPCacheRecreation($this->opportunity);
         $app->enqueueEntityToPCacheRecreation($this);
 
         $app->applyHookBoundTo($this, "entity($this->hookClassPath).send:after");
@@ -795,17 +814,15 @@ class Registration extends \MapasCulturais\Entity
 
             $field_name = $field_prefix . $field->id;
             $field_required = $field->required;
-
             if(isset($metadata_definition->config['registrationFieldConfiguration']->config['require'])){
-                if ($cond_require = $metadata_definition->config['registrationFieldConfiguration']->config['require'] && 
-                    ((!empty($metadata_definition->config['registrationFieldConfiguration']->config['require']['condition']) || 
-                    $metadata_definition->config['registrationFieldConfiguration']->config['require']['condition'] != "") && 
-                    $metadata_definition->config['registrationFieldConfiguration']->config['require']['condition'])) {
+                $cond_require =  $metadata_definition->config['registrationFieldConfiguration']->config['require'];
 
+                if ($cond_require['condition']) {
 
                     if(is_object($cond_require)){
                         $cond_require = (array) $cond_require;
                     }
+                    
                     $_fied_name = isset($cond_require['field']) ? $cond_require['field'] : null;
                     $_fied_value = isset($cond_require['value']) ? $cond_require['value'] : null;
         
@@ -1070,16 +1087,12 @@ class Registration extends \MapasCulturais\Entity
                 $is_valuer = true;
             }
         }
+        
+        if(!$is_valuer){
+            return false;
+        }
     
         $evaluation = $this->getUserEvaluation($user);
-
-        if(!$is_valuer){
-            if($evaluation){
-                return true;
-            } else {
-                return false;
-            }
-        }
     
         $can = $this->canUserViewUserEvaluation($user);
 

@@ -1,4 +1,6 @@
 <?php
+use MapasCulturais\i;
+
 $action = preg_replace("#^(\w+/)#", "", $this->template);
 $this->bodyProperties['ng-app'] = "entity.app";
 $this->bodyProperties['ng-controller'] = "EntityController";
@@ -49,6 +51,8 @@ $this->entity = $entity;
 
             <?php $this->part('singles/name', ['entity' => $entity]) ?>
 
+            <?php $this->part('widget-areas', ['entity' => $entity]); ?>
+
             <?php $this->applyTemplateHook('header-content','end'); ?>
         </div>
         <!--.header-content-->
@@ -60,9 +64,9 @@ $this->entity = $entity;
     <?php $this->applyTemplateHook('tabs','before'); ?>
     <ul class="abas clearfix clear">
         <?php $this->applyTemplateHook('tabs','begin'); ?>
-        <li class="active"><a href="#sobre" rel='noopener noreferrer'><?php \MapasCulturais\i::_e("Sobre");?></a></li>
+        <?php $this->part('tab', ['id' => 'sobre', 'label' => i::__("Sobre"), 'active' => true]) ?>
         <?php if(!($this->controller->action === 'create')):?>
-        <li><a href="#permissao" rel='noopener noreferrer'><?php \MapasCulturais\i::_e("Responsáveis");?></a></li>
+            <?php $this->part('tab', ['id' => 'permissao', 'label' => i::__("Responsáveis"), 'active' => true]) ?>
         <?php endif;?>
         <?php $this->applyTemplateHook('tabs','end'); ?>
     </ul>
@@ -116,8 +120,6 @@ $this->entity = $entity;
     <?php $this->part('related-seals.php', array('entity'=>$entity)); ?>
 
     <?php $this->part('singles/space-public', ['entity' => $entity]) ?>
-
-    <?php $this->part('widget-areas', ['entity' => $entity]); ?>
 
     <?php $this->part('widget-tags', ['entity' => $entity]); ?>
 
