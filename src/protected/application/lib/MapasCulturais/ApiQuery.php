@@ -385,6 +385,7 @@ class ApiQuery {
         
         $this->em = $app->em;
         
+        krsort($api_params);
         $this->apiParams = $api_params;
         
         if(strpos($class, 'MapasCulturais\Entities\Opportunity') === 0 && $this->parentQuery){
@@ -1095,7 +1096,11 @@ class ApiQuery {
                 
                 // do usuário só permite id e profile
                 if($prop == 'user') {
-                    $cfg['select'] = array_intersect($cfg['select'], ['id', 'profile']);
+                    $cfg['select'] = array_filter($cfg['select'], function($field) {
+                        if ($field == 'id' || substr($field, 0, 7) == 'profile') {
+                            return $field;
+                        }
+                    });
                 }
                 
                 if($prop == 'permissionTo'){
@@ -1790,6 +1795,8 @@ class ApiQuery {
                 $this->_limit = $value;
             } elseif (strtolower($key) == '@keyword') {
                 $this->_keyword = $value;
+            } elseif (strtolower($key) == '@permissionsuser') {
+                $this->_permissionsUser = $value;
             } elseif (strtolower($key) == '@permissions') {
                 $this->_addFilterByPermissions($value);
             } elseif (strtolower($key) == '@seals') {
@@ -1835,12 +1842,19 @@ class ApiQuery {
     
     protected $_filteringByPermissions = false;
             
+    protected $_permissionsUser = null;
+
+    protected function _setPermissionsUser($value) {
+        $this->_permissionsUser = $value;
+    }
+
     protected function _addFilterByPermissions($value) {
         $app = App::i();
-        $user = $app->user;
+        $user = $this->_permissionsUser ?
+            $app->repo('User')->find($this->_permissionsUser) :
+            $app->user;
         $this->_permission = trim($value);
         $class = $this->entityClassName;
-        
         if($this->_accessControlEnabled && $this->_permission && !$user->is('saasAdmin')){
             $alias = $this->getAlias('pcache');
             

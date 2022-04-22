@@ -4,6 +4,10 @@ namespace MapasCulturais\Traits;
 use MapasCulturais\App;
 use MapasCulturais\Entity;
 
+/**
+ * @property-read string $permissionCacheClassName
+ * @property-read string[] $permissionsList
+ */
 trait EntityPermissionCache {
     public $__skipQueuingPCacheRecreation = false;
 
@@ -96,7 +100,7 @@ trait EntityPermissionCache {
                 $users = array_merge($users, $this->getExtraPermissionCacheUsers());
             }
         }
-
+        $app->applyHookBoundTo($this, "{$this->hookPrefix}.permissionCacheUsers", [&$users]);
 
         $conn = $app->em->getConnection();
         $class_name = $this->getPCacheObjectType();

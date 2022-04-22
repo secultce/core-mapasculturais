@@ -4,6 +4,7 @@ namespace MapasCulturais\Entities;
 use Doctrine\ORM\Mapping as ORM;
 use MapasCulturais\Traits;
 use MapasCulturais\App;
+use MapasCulturais\i;
 
 /**
  * Registration
@@ -28,7 +29,7 @@ class Registration extends \MapasCulturais\Entity
         Traits\EntityAgentRelation,
         Traits\EntityPermissionCache,
         Traits\EntityOriginSubsite,
-        Traits\EntitySealRelation {
+        Traits\EntityRevision {
             Traits\EntityMetadata::canUserViewPrivateData as __canUserViewPrivateData;
         }
 
@@ -39,6 +40,8 @@ class Registration extends \MapasCulturais\Entity
     const STATUS_NOTAPPROVED = 3;
     const STATUS_INVALID = 2;
 
+
+    protected $__enableMagicGetterHook = true;
 
     /**
      * @var integer
@@ -217,8 +220,6 @@ class Registration extends \MapasCulturais\Entity
 
     function save($flush = false){
         parent::save($flush);
-        $app = App::i();
-        $opportunity = $this->opportunity;
     }
 
     function getSingleUrl(){
@@ -268,6 +269,8 @@ class Registration extends \MapasCulturais\Entity
     }
     
     function jsonSerialize() {
+        $this->registerFieldsMetadata();
+        
         $json = [
             'id' => $this->id,
             'opportunity' => $this->opportunity->simplify('id,name,singleUrl'),
@@ -286,7 +289,7 @@ class Registration extends \MapasCulturais\Entity
             $json['evaluationResultString'] = $this->getEvaluationResultString();
         }
 
-        foreach($this->getRegisteredMetadata() as $meta_key => $def){
+        foreach($this->getRegisteredMetadata(null, true) as $meta_key => $def){
             if(substr($meta_key, 0, 6) === 'field_'){
                 $json[$meta_key] = $this->$meta_key;
             }
@@ -529,12 +532,17 @@ class Registration extends \MapasCulturais\Entity
 
     function setAgentsSealRelation() {
     	$app = App::i();
+
+        /*
+        * Related Seals added to registration to Agents (Owner/Institution/Collective) atributed on aproved registration
+        */
+        $opportunityMetadataSeals = $this->opportunity->registrationSeals;
+
+        $app->applyHookBoundTo($this, "entity({$this->hookClassPath}).setAgentsSealRelation:before", [&$opportunityMetadataSeals]);
+
     	$app->disableAccessControl();
 
-    	/*
-    	 * Related Seals added to registration to Agents (Owner/Institution/Collective) atributed on aproved registration
-    	 */
-    	$opportunityMetadataSeals = $this->opportunity->registrationSeals;
+        $seal_relations = (object)[];
 
     	if(isset($opportunityMetadataSeals->owner)) {
     		$relation_class = $this->owner->getSealRelationEntityClassName();
@@ -546,6 +554,8 @@ class Registration extends \MapasCulturais\Entity
 	        $relation->agent    = $this->opportunity->owner; //  o agente que aplica o selo (o dono da oportunidade)
 
             $relation->save(true);
+
+            $seal_relations->owner = $relation;
     	}
 
     	$sealInstitutions = isset($opportunityMetadataSeals->institution) ?
@@ -555,6 +565,7 @@ class Registration extends \MapasCulturais\Entity
                 $app->repo('Seal')->find($opportunityMetadataSeals->collective) : null;
 
         foreach($this->relatedAgents as $groupName => $relatedAgents){
+            $relation = null;
         	if (trim($groupName) == 'instituicao' && isset($opportunityMetadataSeals->institution) && is_object($sealInstitutions)) {
         		$agent = $relatedAgents[0];
         		$relation = new $relation_class;
@@ -570,8 +581,31 @@ class Registration extends \MapasCulturais\Entity
                 $relation->agent = $this->opportunity->owner;
         		$relation->save(true);
         	}
+            if ($relation) {
+                $seal_relations->$groupName = $relation;
+            }
         }
         $app->enableAccessControl();
+
+        $app->applyHookBoundTo($this, "entity({$this->hookClassPath}).setAgentsSealRelation:after", [&$opportunityMetadataSeals, &$seal_relations]);
+    }
+
+    /**
+     * Retorna array com os nomes dos status
+     * 
+     * @return array
+     */
+    
+    protected static function _getStatusesNames() {
+        $statuses = parent::_getStatusesNames();
+
+        $statuses[self::STATUS_SENT] = i::__('Pendente');
+        $statuses[self::STATUS_INVALID] = i::__('Inválida');
+        $statuses[self::STATUS_NOTAPPROVED] = i::__('Não selecionada');
+        $statuses[self::STATUS_WAITLIST] = i::__('Suplente');
+        $statuses[self::STATUS_APPROVED] = i::__('Selecionada');
+
+        return $statuses;
     }
 
     function setStatusToDraft(){
@@ -624,11 +658,9 @@ class Registration extends \MapasCulturais\Entity
         $this->checkPermission('send');
         $app = App::i();
 
-        $_access_control_enabled = $app->isAccessControlEnabled();
+        $app->applyHookBoundTo($this, "entity($this->hookClassPath).send:before");
 
-        if($_access_control_enabled){
-            $app->disableAccessControl();
-        }
+        $app->disableAccessControl();
 
         // copies agents data including configured private
 
@@ -643,12 +675,13 @@ class Registration extends \MapasCulturais\Entity
         $this->_spaceData = $this->_getSpaceData();
         $this->save(true);
 
-        if($_access_control_enabled){
-            $app->enableAccessControl();
-        }
-
-        $app->enqueueEntityToPCacheRecreation($this->opportunity);
+        $app->enableAccessControl();
+        
+        // $app->enqueueEntityToPCacheRecreation($this->opportunity);
         $app->enqueueEntityToPCacheRecreation($this);
+
+        $app->applyHookBoundTo($this, "entity($this->hookClassPath).send:after");
+
     }
 
     function cleanMaskedRegistrationFields(){
@@ -725,7 +758,7 @@ class Registration extends \MapasCulturais\Entity
             }
 
             if($errors){
-                $errorsResult[$agent_prefix . $def->agentRelationGroupName] = implode(' ', $errors);
+                $errorsResult[$agent_prefix . $def->agentRelationGroupName] = [implode(' ', $errors)];
             }
         }
 
@@ -781,12 +814,15 @@ class Registration extends \MapasCulturais\Entity
 
             $field_name = $field_prefix . $field->id;
             $field_required = $field->required;
-
             if(isset($metadata_definition->config['registrationFieldConfiguration']->config['require'])){
-                if ($cond_require = $metadata_definition->config['registrationFieldConfiguration']->config['require']) {
+                $cond_require =  $metadata_definition->config['registrationFieldConfiguration']->config['require'];
+
+                if ($cond_require['condition']) {
+
                     if(is_object($cond_require)){
                         $cond_require = (array) $cond_require;
                     }
+                    
                     $_fied_name = isset($cond_require['field']) ? $cond_require['field'] : null;
                     $_fied_value = isset($cond_require['value']) ? $cond_require['value'] : null;
         
@@ -847,8 +883,14 @@ class Registration extends \MapasCulturais\Entity
             $errorsResult['projectName'] = \MapasCulturais\i::__('O campo é obrigatório.');
         }
 
+        $app->applyHookBoundTo($this, "entity($this->hookClassPath).sendValidationErrors", [&$errorsResult]);
+
         return $errorsResult;
-    }    
+    }
+
+    function registerFieldsMetadata() {
+        $this->opportunity->registerRegistrationMetadata();
+    }
 
     protected function _getSpaceData(){
         $app = App::i();
@@ -925,9 +967,14 @@ class Registration extends \MapasCulturais\Entity
         if($this->opportunity->isUserAdmin($user)){
             return true;
         }
-
-        if($this->canUser('@control', $user)){
-            return true;
+     
+        if($this->canUser('@control', $user)){          
+            if((new \DateTime()) >= $this->opportunity->registrationFrom ){
+              return true;
+            }
+            
+            return false;
+            
         }
 
         if($this->opportunity->canUser('@control', $user)){
@@ -1000,7 +1047,10 @@ class Registration extends \MapasCulturais\Entity
         if($this->status !== self::STATUS_DRAFT){
             return false;
         }else{
-            return $this->genericPermissionVerification($user);
+            if((new \DateTime() >= $this->opportunity->registrationFrom) && $this->genericPermissionVerification($user)){
+                return true;
+            }
+            return false;
         }
     }
 
@@ -1037,16 +1087,12 @@ class Registration extends \MapasCulturais\Entity
                 $is_valuer = true;
             }
         }
+        
+        if(!$is_valuer){
+            return false;
+        }
     
         $evaluation = $this->getUserEvaluation($user);
-
-        if(!$is_valuer){
-            if($evaluation){
-                return true;
-            } else {
-                return false;
-            }
-        }
     
         $can = $this->canUserViewUserEvaluation($user);
 
@@ -1099,7 +1145,7 @@ class Registration extends \MapasCulturais\Entity
 
     protected function canUserViewPrivateData($user){
         $can = $this->__canUserViewPrivateData($user) || $this->opportunity->canUser('@control', $user);
-
+        
         // @todo fazer essa verificação por meio de hook no módulo de fases (#1659)
         $canUserEvaluateNextPhase = false;
         if($this->getMetadata('nextPhaseRegistrationId') !== null) {
