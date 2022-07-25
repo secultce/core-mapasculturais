@@ -5,8 +5,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         ruby ruby-dev libpq-dev gnupg nano iputils-ping git \
         libfreetype6-dev libjpeg62-turbo-dev libpng-dev less vim
 
-RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
-    && apt-get install -y nodejs npm
+#RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
+#    && apt-get install -y nodejs npm
+
+RUN curl -sL https://deb.nodesource.com/setup_12.x | bash
+RUN apt-get update && apt-get install -y nodejs && apt-get clean
+RUN npm install npm --global
 
 RUN rm -rf /var/lib/apt/lists
 
@@ -21,6 +25,11 @@ RUN gem install sass -v 3.4.22
 
 # Install extensions
 RUN docker-php-ext-install opcache pdo_pgsql zip xml curl json 
+
+RUN apt-get update && apt-get install -y --fix-missing \
+    zlib1g-dev \
+    libzip-dev
+RUN docker-php-ext-install zip
 
 # Install GD
 RUN docker-php-ext-install -j$(nproc) iconv \
@@ -70,6 +79,16 @@ COPY compose/config.d /var/www/html/protected/application/conf/config.d
 RUN ln -s /var/www/html /var/www/src
 
 COPY version.txt /var/www/version.txt
+
+# Permissions
+RUN chown -R root:www-data /var/www/html
+RUN chmod -R u+rwx,g+rx,o+rx /var/www/html
+RUN find /var/www/html -type d -exec chmod u+rwx,g+rx,o+rx {} +
+RUN find /var/www/html -type f -exec chmod u+rw,g+rw,o+r {} +
+RUN mkdir /var/log/nginx/
+RUN chown -R root:www-data /var/log/nginx/
+RUN chmod -R 777 /var/log/nginx/
+
 
 COPY compose/jobs-cron.sh /jobs-cron.sh
 COPY compose/recreate-pending-pcache-cron.sh /recreate-pending-pcache-cron.sh
