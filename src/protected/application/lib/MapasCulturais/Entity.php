@@ -900,6 +900,10 @@ abstract class Entity implements \JsonSerializable{
             $result['editUrl'] = $this->getEditUrl();
             $result['singleUrl'] = $this->getSingleUrl();
         }
+
+        if($this->usesSealRelation()) {
+            $result['lockedFields'] = $this->lockedFields;
+        }
         
         unset(Entity::$_jsonSerializeNestedObjects[$_uid]);
 
