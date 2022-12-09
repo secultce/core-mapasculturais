@@ -695,15 +695,7 @@ class Controller extends \MapasCulturais\Controller
          if($languages){
             $languages_list = $app->getRegisteredTaxonomyBySlug('linguagem')->restrictedTerms;
             foreach(array_filter($languages) as $language){
-<<<<<<< HEAD
-<<<<<<< HEAD
                $_lang = $this->lowerStr($language);
-=======
-               $_lang = trim(mb_strtolower($language));
->>>>>>> 0c9158fd1 (Remove espaço após passar para minuscula)
-=======
-               $_lang = mb_strtolower($language);
->>>>>>> 4609c1eb5 (Remove espaço após passar linguagem para minusculo)
                $_languages[] = $languages_list[$_lang];
             }
          }
