@@ -1547,7 +1547,7 @@ module.controller('RegistrationFieldsController', ['$scope', '$rootScope', '$int
     }, 1000);
 
     $scope.lockedField = function (field) {
-        if(!field.config.entityField){
+        if(!field.config?.entityField){
             return false;
         }
         
