@@ -746,8 +746,9 @@ class Theme extends MapasCulturais\Theme {
 
     protected static function _getTexts(){
         $app = App::i();
+        $class = get_called_class();
 
-        return array_map(function($e) { return $e['text']; }, self::_dict());
+        return array_map(function($e) { return $e['text']; }, $class::_dict());
     }
 
     function getSearchAgentsUrl(){
@@ -1371,8 +1372,9 @@ class Theme extends MapasCulturais\Theme {
         $image_url = $app->view->asset('img/share.png', false);
         if ($entity) {
             $description = $entity->shortDescription ? $entity->shortDescription : $title;
-            if ($entity->avatar)
+            if ($entity->avatar && $entity->avatar->transform('avatarBig')){
                 $image_url = $entity->avatar->transform('avatarBig')->url;
+            }
         }else {
             $description = $this->dict('site: description', false);
         }
@@ -2324,8 +2326,7 @@ class Theme extends MapasCulturais\Theme {
     	$app = App::i();
     	if (!$app->user->is('guest')) {
     		$this->jsObject['allowedSeals'] = $app->controller('seal')->apiQuery($query);
-
-        	if($app->user->is('admin') || $this->jsObject['allowedSeals'] > 0) {
+        	if($app->user->is('admin') || count($this->jsObject['allowedSeals']) > 0) {
         		$this->jsObject['canRelateSeal'] = true;
         	} else {
         		$this->jsObject['canRelateSeal'] = false;
@@ -2485,7 +2486,7 @@ class Theme extends MapasCulturais\Theme {
             $agent = $def->agent;
             if($agent){
                 $def->agent = $agent->simplify('id,name,shortDescription,singleUrl');
-                $def->agent->avatarUrl = $agent->avatar ? $agent->avatar->transform('avatarSmall')->url : null;
+                $def->agent->avatarUrl = ($agent->avatar && $agent->avatar->transform('avatarSmall')) ? $agent->avatar->transform('avatarSmall')->url : null;
                 if($entity->status > 0){ // is sent
                     if(isset($entity->agentsData[$def->agentRelationGroupName])){
                         foreach($entity->agentsData[$def->agentRelationGroupName] as $prop => $val){
