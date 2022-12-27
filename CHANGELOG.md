@@ -78,6 +78,12 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Novas Funcionalidade
 - Importação de eventos por planilha
 
+## [5.3.39] - 2022-12-27
+### Correções
+- Corrige validação e definição de campos nulos
+- Formulário de inscrição envia valores falsos não nulos
+- Validação de campos numéricos obrigatórios vazios
+
 ## [5.3.38] - 2022-11-30
 ### Correções
 - Corrige verificação de criação das taxnomias
