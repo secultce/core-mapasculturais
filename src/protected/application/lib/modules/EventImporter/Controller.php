@@ -277,6 +277,9 @@ class Controller extends \MapasCulturais\Controller
 
    public function processData($file_data, $file)
    {
+      ini_set('max_execution_time', 0);
+      ini_set('memory_limit', '768M');
+      
       $app = App::i();
 
       $file_dir = $file->path;
@@ -343,11 +346,6 @@ class Controller extends \MapasCulturais\Controller
 
             if(empty(array_filter($value))){
                continue;
-            }
-
-            if($err = $this->checkRemoteFile($value, $key)){
-               $this->render("import-erros", ["errors" => $err, 'filename' => basename($file_dir)]);
-               exit;
             }
 
             $type_process_map = $this->typeProcessMap($value);
