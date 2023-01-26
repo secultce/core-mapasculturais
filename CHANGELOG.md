@@ -44,6 +44,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Correções
 - Corrige jsonSerialize da registration para quando a ficha é acessada por um gestor da oportunidade o mesmo poça ter acesso aos campos sem necessidade de liberação na permissão dos avaliadores
 
+## [5.5.7] - 2023-01-26
+### Correções
+- Corrige jsonSerialize da registration para quando a ficha é acessada por um gestor da oportunidade o mesmo poça ter acesso aos campos sem necessidade de liberação na permissão dos avaliadores
+
 ## [5.5.6] - 2023-01-18
 ### Correções
 - bugfix registration_field_configuratios ao passar um campo tipo @ para um campo normal
