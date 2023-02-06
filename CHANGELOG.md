@@ -39,7 +39,14 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Cria novo template de e-mail para o recurso usando padrão header+footer+imagem
 =======
 ## [unreleased]
+<<<<<<< HEAD
 >>>>>>> da58814f5 (Restalra o formulário de recurso para a oportunidade Ref.: #2356)
+=======
+
+### Melhorias
+- Cria hooks que possibilitam manipular sidebar direito na ficha de inscrição
+- Cria novo template de e-mail para o recurso usando padrão header+footer+imagem
+>>>>>>> 1e6209730 (Atualiza CHANGELOG.md)
 ### Correções
 - seta como vazio campo escolaridade do agent caso esteja com valor não informado
 - Corrige função append do ajaxUpload para entender quando o registro do grupo do arquivo for para um único arquivo
