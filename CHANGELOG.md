@@ -5,6 +5,7 @@ O formato é baseado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 ## [5.5.15] - 2023-03-06
 ### Correções
 - Evita que ao importar inscrições entre fases, não seja disparado e-mail de notificação da criação da inscrição
@@ -26,12 +27,17 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Melhorias
 - Melhora performance da criação de revisões de agentes com muitas propriedades
 
+=======
+>>>>>>> fedd59079 (Atualiza CHANGELOG.md)
 ## [5.5.10] - 2023-02-10
 ### Correções
 - Corrige erro da acentuação no upload de arquivos
 
+<<<<<<< HEAD
 =======
 >>>>>>> bb9e249c4 (Atualiza CHENGELOG.md)
+=======
+>>>>>>> fedd59079 (Atualiza CHANGELOG.md)
 ## [5.5.9] - 2023-02-09
 ### Melhorias
 - Cria template de e-mail para enviar certificado de solicitação de recurso ao proponente
