@@ -3,9 +3,7 @@ Todas as mudanças notáveis no projeto serão documentadas neste arquivo.
 
 O formato é baseado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)
 e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 ## [5.5.15] - 2023-03-06
 ### Correções
 - Evita que ao importar inscrições entre fases, não seja disparado e-mail de notificação da criação da inscrição
@@ -27,17 +25,9 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Melhorias
 - Melhora performance da criação de revisões de agentes com muitas propriedades
 
-=======
->>>>>>> fedd59079 (Atualiza CHANGELOG.md)
 ## [5.5.10] - 2023-02-10
 ### Correções
 - Corrige erro da acentuação no upload de arquivos
-
-<<<<<<< HEAD
-=======
->>>>>>> bb9e249c4 (Atualiza CHENGELOG.md)
-=======
->>>>>>> fedd59079 (Atualiza CHANGELOG.md)
 ## [5.5.9] - 2023-02-09
 ### Melhorias
 - Cria template de e-mail para enviar certificado de solicitação de recurso ao proponente
@@ -46,16 +36,13 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Melhorias
 - Cria hooks que possibilitam manipular sidebar direito na ficha de inscrição
 - Cria novo template de e-mail para o recurso usando padrão header+footer+imagem
-=======
+
 ## [unreleased]
-<<<<<<< HEAD
->>>>>>> da58814f5 (Restalra o formulário de recurso para a oportunidade Ref.: #2356)
-=======
 
 ### Melhorias
 - Cria hooks que possibilitam manipular sidebar direito na ficha de inscrição
 - Cria novo template de e-mail para o recurso usando padrão header+footer+imagem
->>>>>>> 1e6209730 (Atualiza CHANGELOG.md)
+
 ### Correções
 - seta como vazio campo escolaridade do agent caso esteja com valor não informado
 - Corrige função append do ajaxUpload para entender quando o registro do grupo do arquivo for para um único arquivo
