@@ -636,6 +636,8 @@ class User extends \MapasCulturais\Entity implements \MapasCulturais\UserInterfa
             $opportunityIDs = [];
             foreach ($opportunitiesPermission as $opportunity) {
                 $op = $app->repo('Registration')->find($opportunity->objectId);
+
+                //esse if é nececessário para evitar erro no painel assim que o usuário loga
                 if(array_key_exists($user_id, $opportunities)){
                     $opportunityIDs[] = $op->opportunity->id;
                 }
