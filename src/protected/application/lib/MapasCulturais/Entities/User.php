@@ -636,7 +636,9 @@ class User extends \MapasCulturais\Entity implements \MapasCulturais\UserInterfa
             $opportunityIDs = [];
             foreach ($opportunitiesPermission as $opportunity) {
                 $op = $app->repo('Registration')->find($opportunity->objectId);
-                $opportunityIDs[] = $op->opportunity->id;
+                if(array_key_exists($user_id, $opportunities)){
+                    $opportunityIDs[] = $op->opportunity->id;
+                }
             }
 
             $opportunities = $app->repo('Opportunity')->findBy([
