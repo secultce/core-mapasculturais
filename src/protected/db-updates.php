@@ -1319,7 +1319,7 @@ $$
         if (!__column_exists('permission_cache_pending', 'status')) {
             $conn->executeQuery("ALTER TABLE permission_cache_pending ADD status smallint DEFAULT 0");
         }
-    }
+    },
 
     'RECREATE VIEW evaluations AGAIN!' => function() use($conn) {
         __try("DROP VIEW evaluations");
