@@ -3283,14 +3283,17 @@ class App extends \Slim\Slim{
 
         $log = key_exists('app.log.translations', $app->_config) && $app->_config['app.log.translations'];
 
-        if(key_exists($file, $translations) && is_array($translations[$file]) && key_exists($message, $translations[$file])){
-            $message = $translations[$file][$message];
-        }elseif(key_exists($message, $translations)){
-            $message = $translations[$message];
-        }elseif($log){
-            $app->applyHook("txt({$domain}.{$lcode}).missingTranslation");
-            $app->log->warn ("TXT > missing '$lcode' translation for message '$message' in domain '$domain'");
+        if(is_array($translations[$file])){
+            if(key_exists($file, $translations) && is_array($translations[$file]) && key_exists($message, $translations[$file])){
+                $message = $translations[$file][$message];
+            }elseif(key_exists($message, $translations)){
+                $message = $translations[$message];
+            }elseif($log){
+                $app->applyHook("txt({$domain}.{$lcode}).missingTranslation");
+                $app->log->warn ("TXT > missing '$lcode' translation for message '$message' in domain '$domain'");
+            }
         }
+        
 
 
         return $message;
