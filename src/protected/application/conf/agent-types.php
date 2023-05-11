@@ -91,6 +91,17 @@ return array(
             ),
             'available_for_opportunities' => true
         ),
+        'agenteItinerante' => array(
+            'private' => true,
+            'label' => \MapasCulturais\i::__('Agente Itinerante'),
+            'type' => 'select',
+            'options' => array(
+                '' => \MapasCulturais\i::__('Não Informar'),
+                'Sim' => \MapasCulturais\i::__('Sim'),
+                'Não' => \MapasCulturais\i::__('Não'),
+            ),
+            'available_for_opportunities' => true
+        ),
         
         
         
@@ -234,6 +245,10 @@ return array(
         'En_Pais' => [
             'label' => \MapasCulturais\i::__('País'),
             'type' => 'select',
+            'default' => function(){
+                $app = MapasCulturais\App::i();
+                return $app->config['app.defaultCountry'];
+            },
             'options' => [
                 'AD' => 'Andorra',
                 'AR' => 'Argentina',

@@ -235,6 +235,13 @@ abstract class Opportunity extends \MapasCulturais\Entity
      * @ORM\Column(name="subsite_id", type="integer", nullable=true)
      */
     protected $_subsiteId;
+
+     /**
+     * @var object
+     *
+     * @ORM\Column(name="avaliable_evaluation_fields", type="json_array", nullable=true)
+     */
+    protected $avaliableEvaluationFields = [];
     
     abstract function getSpecializedClassName();
 
@@ -275,6 +282,14 @@ abstract class Opportunity extends \MapasCulturais\Entity
 
         if($cascade){
             $eval->setOpportunity($this, false);
+        }
+    }
+    
+    function setAvaliableEvaluationFields($value) {
+        if(!$value || empty($value)){
+            $this->avaliableEvaluationFields = [];
+        }else{
+            $this->avaliableEvaluationFields = $value;
         }
     }
     
@@ -882,8 +897,11 @@ abstract class Opportunity extends \MapasCulturais\Entity
     protected function canUserSendUserEvaluations($user){
         $can_evaluate = $this->canUserEvaluateRegistrations($user);
         
-        $evaluations_ok = true;
-        foreach($this->getSentRegistrations() as $reg){
+        $today = new \DateTime('now');
+        $registrations = $this->getSentRegistrations();
+
+        $evaluations_ok = (($today >= $this->registrationTo) && $registrations) ? true : false;
+        foreach($registrations as $reg){
             if($reg->canUser('evaluate')){
                 $evaluation = $reg->getUserEvaluation($user);
                 if(is_null($evaluation) || $evaluation->status != RegistrationEvaluation::STATUS_EVALUATED){
@@ -905,7 +923,7 @@ abstract class Opportunity extends \MapasCulturais\Entity
             return true;
         }
 
-        if($this->registrationTo > (new \DateTime) || $this->publishedRegistrations){
+        if($this->publishedRegistrations){
             return false;
         }
 

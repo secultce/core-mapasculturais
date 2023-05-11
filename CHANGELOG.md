@@ -3,16 +3,294 @@ Todas as mudanças notáveis no projeto serão documentadas neste arquivo.
 
 O formato é baseado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)
 e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [5.4.6] - 2023-01-26
+### Correções
+- Corrige jsonSerialize da registration para quando a ficha é acessada por um gestor da oportunidade o mesmo poça ter acesso aos campos sem necessidade de liberação na permissão dos avaliadores
 
-## [Unreleased]
+## [5.4.5] - 2023-01-09
+### Correções
+- Evita que autosave execute na ficha de inscrição após a mesma estar enviada
+- Corrige erros de carregamento do thumbnail do avatar nos templates referente ao agente caso nao encontre o avatar
+- Corrige problema de duplicidade ao processar a planilha de importação de eventos
+## [5.4.4] - 2022-12-28
+- Corrige redirecionamento após criação de App
 
+## [5.4.3] - 2022-12-27
+### Correções
+- Corrige validação e definição de campos nulos
+- Formulário de inscrição envia valores falsos não nulos
+- Validação de campos numéricos obrigatórios vazios
+
+## [5.4.2] - 2022-12-20
+### Correções
+- Evita que ao processar a planilha do importador de eventos, caia em timeout
+## [5.4.1] - 2022-12-19
+### Correções
+- Corrige importador de enventos interpretanto Avatar, Banner e Galeria como campos obrigatórios
+## [5.4.0] - 2022-12-14
+### Correções
+- Atualiza updateTimestamp das entidades quando modificado um metadado
+
+### Novas Funcionalidade
+- Importação de eventos por planilha
+
+## [5.3.38] - 2022-11-30
+### Correções
+- Corrige verificação de criação das taxnomias
+## [5.3.37] - 2022-11-18
+### Correções
+- corrige definição de valor default para os metadados
+
+## [5.3.36] - 2022-11-16
+### Correções
+- typo no módulo Notifications 
+
+## [5.3.35] - 2022-11-16
+### Correções
+- Corrige erro ao gerar thumbnails do avatar
+
+## [5.3.34] - 2022-11-10
+### Correções
+- Corrige erro ao enviar inscrições
+
+## [5.3.33] - 2022-11-10
+### Correções
+- Corrige problema de não salvar a inscrição quando existe campos obrigatórios não preenchidos na ficha
+
+## [5.3.32] - 2022-10-21
+### Melhorias
+- Cria módulo para importação de eventos atrvéz de planilha CSV
+
+### Correções
+- Aplica correções nos layouts de e-mails no novo módulo de disparo de notificações
+
+## [5.3.31] - 2022-10-18
+### Melhorias
+- Cria módulo para para disparos de e-mails gerais no mapas culturais
+
+## [5.3.30] - 2022-10-6
+### Correções
+- Instala LIB league/csv
+
+## [5.3.29] - 2022-10-5
+### Correções
+- Corrige erro que permite o agente excluir um selo associado a ele
+
+## [5.3.28] - 2022-09-13
+### Correções
+- Corrige db-update que faz a correção de eros nas inscrições entre fases
+- Faz com que os fields sejam registrados recursivamente ao reconsolidar as avaliações
+
+## [5.3.27] - 2022-09-09
+### Correções
+- Corrige busca recursiva dos fields nos casos de oportunidades multifases
+
+## [5.3.26] - 2022-08-19
+### Melhorias
+- Cria dp-update que define permissão em todos os campos nas permissões dos avaliadores para oportunidades legadas 
+
+## [5.3.25] - 2022-08-16
+### Correções
+- Corrige objeto Module para a chamada do método getChartsColors
+- Corrige exportação do .csv quando existe campos de endereço do agente na inscrição
+- Corrige busca de endereço agente por cep na inscrição
+
+## [5.3.24] - 2022-08-12
+### Correções
+- Ajusta permissão dos avaliadores para nao quebrar quando o formulário estiver sem campos
+
+## [5.3.23] - 2022-08-01
+### Correções
+- Faz com que o método dict, retorne o valor ao invez de imprimir
+- Garante que a pasta SaaS seja sempre criada com a permissão correta
+- Faz com que o método dict, retorne o valor ao invez de imprimir no arquivo space.php
+
+## [5.3.22] - 2022-07-26
+### Correções
+- Corrige redirecionamento do subsite após edição e criação
+- Garante que ao acessar a single do subsite esteja em modo de edição
+
+## [5.3.21] - 2022-07-25
+- Ajusta local de tipagem para array da variavel $_field_val
+- Ajusta entripoint para setar permissão correta na pasta DoctrineProxies
+
+## [5.3.20] - 2022-07-21
+### Correções
+- Remove chamadas de função iniexistente
+
+## [5.3.19] - 2022-07-12
+### Correções
+- Corrige erro na contagem de avaliações
+
+## [5.3.18] - 2022-06-23
+- Revisa condicionais para exibir campos das politicas afirmatrivas para o avaliador e na planilha de inscritos
+
+## [5.3.17] - 2022-06-10
+- Remove atualização dos metadados dos campos @ do dp-update e passa para o mc-updates
+
+## [5.3.16] - 2022-06-10
+- Cria termo de autorização de uso de imagem padrão
+
+## [5.3.15] - 2022-06-10
+### Correções
+- Garante que fique visivel campo do projeto para o proponente e o gestor, independente se existe liberação para o avaliador ou não no sistema de permissão dos avaliadores
+- cria db-update que pega os dados relacionados a ficha e salva nos metadados
+- Corrige erro que nao deixa exibir campo permitido ao avaliador, caso a categoria nao esteja liberada
+- Ajusta telas de edição e visualização do cartão de visitas do agente para exibição da label dados pessoais somente se existir dados ou se estiver em modo de edição
+
+## [5.3.14] - 2022-06-07
+### Correções
+- Evita criação duplicada de metadados
+### Melhorias
+- Novos hooks
+  
+## [5.3.13] - 2022-06-07
+### Correções
+- Melhora configuração do recapcha no módulo CompliantSuggestion
+- Corrige texto das politicas afirmativas da planilha de inscritos que estava escrito errado
+- Correção do cartão das entidades no campo descrição curta.
+- Aplica o ajuste na de estilo tabela de critérios de avaliações de forma que nao afete outros inputs
+- Impede que o proponente envie inscrições que estão em fases excluídas
+- Melhora texto do toltip do botão enviar avaliações
+- Impede que as avaliações sejam enviadas antes do prazo final da fase
+- Evita que o nome do agente e categoria da inscrição seja exibida na listagem de inscrições a serem avaliadas na tela do avaliador caso não tenha permissão para visualizar
+- Faz com que nas politicas afirmativas que a inscrição se enquandar, caso seja um campo multiseleção salve somente o campo correto e não todos
+- Corrige erro de nao deixar associar espaço na tela de edição da inscrição 
+- Corrige erro na política afirmativa que fazia o botão de adicionar administradores nao aparecesse na tela de edição da oportunidade
+### Melhorias
+- Trunca em 80 caractéres o tamanho do título do campo ao exibir no select de configuração das políticas afirmativa
+- Ajusta classe do ID do campo na listagem de campos para liberação para o avaliador padronizando com a configuração do formulário
+- Evita que necessite do número da residência para que se resolva uma geolocalização
+- Ajusta tabela dos crtérios de avaliação para que nao quebre a estilização com mudanças de resolução
+- Adiciona método para poder filtrar campo na sessão de permissão dos avaliadores
+- Verifica se o arquivo Module.php esta presente antes de setar na lista de módulos ativos
+
+## [5.3.12] - 2022-06-02
+- Corrige erro ao salvar campo @ quando os mesmos já retornam preenchidos com dados do agente
+
+## [5.3.11] - 2022-05-25
+### Correções
+- Define chave ENV para configurar chaves do recaptcha google no módulo CompliantSuggestion
+
+## [5.3.10] - 2022-05-24
+### Correções
+- Aplica reverse na máscara do campo caso  o mesmo tenha aclasse  js-mask-currency
+
+## [5.3.9] - 2022-05-23 
+### Correções
+- Corrige erro na abertura da tag php
+
+## [5.3.8] - 2022-05-23 
+### Melhorias
+- Cria campo no agente chamado Agente agente itinerante
+
+## [5.3.7] - 2022-05-23 
+### Correções
+- Ajuste nas fontes dos cartões das entidades
+- Ajuste dos itens faltantes do cartão das entidades
+- Ajuste da posição da tag
+- Corrige css do select que define o tipo de um espaço
+- Utiliza função mb_strlen para contar os caractéres da descrição curta, levando em conta que podem existir caracteres multibyte
+### Melhorias
+- Limita acesso ao botão de download da planila de agentes a administradores
+- Informa numero de caracteres preenchidos na descrição curta do agente
+- Ajusta limite de caractéres da descrição curta em todas as entidades
+- Na listagem de eventos, faz com que filtro seja efetuado por padrão de 1 anos apartir da data atual
+- No endpoint apiQueryByLocation, seta que o período de eventos pesquisados sejam de 1 anos apartir da data atual
+- Quando o agente é redirecionado para a tela de edição por nao ter os dados mínimos preenchidos, eexibe opção de sair "Deslogar"
+- Faz com que o filtro de eventos na gestão de usuários busque todos os eventos independente de existir espaço ou ocorrencias
+
+## [5.3.6] - 2022-05-23 
+- Corrige erro que nao deixava exibir campos condicionados a outros nas configurações das politicas afirmativas
+
+## [5.3.5] - 2022-05-19 
+## Correções
+- Reconsolida a avaliação da inscrição caso em fases posteriores exista avaliação técnica com políticas afirmativas aplicadas
+- Na planilha de inscritos, corrige exibição dos valores de politicas afirmativas atribídas a inscrição
+
+## [5.3.4] - 2022-05-18 
+## Correções
+- Altera o texto das politicas afirmativas no botão de utilização e correção do bug do ckeckbox
+
+## [5.3.3] - 2022-05-17
+### Correções
+- corrige validação de metadaos únicos na criação de entidades
+
+## [5.2.13] - 2022-06-07
+### Correções
+- evita criação duplicada de metadados
+- 
+### Melhorias
+- Novos hooks
+
+## [5.2.12] - 2022-05-17
+### Correções
+- corrige validação de metadaos únicos na criação de entidades
+
+## [5.3.2] - 2022-05-13
+### Correções
+- Corrige listagem de campos das fases anteriores que ficavam vazios em algumas situações
+### Melhorias
+- Libera avaliações antes do término das inscrições
+
+## [5.2.11] - 2022-05-13
+### Correções
+- Corrige listagem de campos das fases anteriores que ficavam vazios em algumas situações
+### Melhorias
+- Libera avaliações antes do término das inscrições
+
+## [5.3.1] - 2022-05-09
+### Melhorias
+- Altera mensagem das inscrições enviadas
+
+## [5.3.0] - 2022-05-09
+### Novas funcionalidades
+- Implementa sistemas de permissão para os avaliadores
+- Implementa calculo sobre políticas afirmativas nas avaliações técnicas
+- Novo tipo de saída da api em tabela de texto: @type=texttable
+
+## [5.2.10] - 2022-05-06
+### Melhorias
+- Após a inscrição ser enviada, pega os dados dos @campo diretamente do metadado e não mais do agente
+  
+## [5.2.9] - 2022-05-03
+### Correções
+- Corrige atualização de geo localização ao se atualizar endereço do agente
+### Melhorias
+- Revisão dos scripts e arquivos de configuração para ambiente de desenvolvimento
+- Deixa o cadastro do agente em conformidade com a LGPD
+- Implementa checagem do tamanho da string da descrição curta do agente no back-end para garantir que se tenha 400 caracteres
+
+## [5.2.9]
+### Correções
+- Corrige a inserção de links nos selos e tela de edição de selos
+
+## [5.2.8]
+### Correções
+- evita warnings em escripts que rodam na cli
+
+## [5.2.7] - 2022-04-25
+- Adiciona possibilidade para a não inclusão do hash nos assets publicados
+
+### Correções
+- Corrige a página de visualização do selo aplicado nas entidades
+
+## [5.2.5] - 2022-04-25
+- Corrige nomes dos arquivos dos assets publicados
+
+## [5.2.4] - 2022-04-25
+- Adição de hooks na tela de gestão de usuários
+  
+## [5.2.3] - 2022-04-18
 - Remove chamada do método requireAuthentication desnecessário no template part info-admin
+
 ## [5.2.2] - 2022-04-14
 ### Correções
 - Remove chamada do parent::__construct()  do controlador
 
 ## [5.2.1] - 2022-04-14
 - Deixa as configuações do modulo LGPD por default  vazia para evitar redirecionamento sem configurações de termos
+
 ## [5.2.0] - 2022-04-14
 ### Novas funcionalidades
 - Novo módulo LGPD com redirecionamento para aceitação dos termos de uso e politica de privacidade, se o usuário ainda não tiver aceito ou sempre que houver modificação nos textos dos termos
@@ -32,6 +310,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 # [5.1.54] - 2022-03-24
 ### Correções
 - Corrige filtro por categoria na aba de avaliações na tela do avaliador
+
 # [5.1.53] - 2022-03-23
 ### Correções
 - Corrige filtro de categorias no endpoint findEvaluation
@@ -40,46 +319,42 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [5.1.52] - 2022-03-22
 ### Correções
 - Desabilita chamada automárica para api/notification/find para evitar sobrecarga no servidor
+
 ## [5.1.51] - 2022-03-07
 ### Correção
-
 - Corrige mascara campo de moeda
 - Remove chamada de método desnecessário no módulo de relatŕorios
-
 ### Melhorias
 - Insere hook para controlar exibição do botão de download de planilhas nas telas das entidades
 
 ## [5.1.50] - 2022-02-25
 ### Correção
-
 - Corrige verificação de obrigatório nos campos que estão condicionados a outros campos do formulário #1928
 - Aplica máscara de moeda no campo, independentemente do mesmo iniciar oculto ou não no carregamento do formulário #1931
+
 ## [5.1.49] - 2022-02-21
 ### Correção
-
 - Ajusta exportação da planilha de inscritos, para que leve em consideração oportunidades multi-fases
+
 ## [5.1.48] - 2022-02-17
 ### Correção
-
 - Aplica redução no nome do campo para evitar problemas na rename do arquivo de anexo no processo de upload Ref.: #1929
+
 ## [5.1.47] - 2022-02-03
 ### Correção
-
 - Remove recriação de cache da oportunidade quando se envia um inscrição
 - Remove lixos hashKey gerados pelo angularjs na tabela registration_meta
 
 ## [5.1.46] - 2022-02-02
 ### Correção
-
 - Corrige bug na troca de agente responsável na fiche de inscrição
+
 ## [5.1.45] - 2022-01-31
 ### Correção
-
 - Impede que campos obrigatórios sejam enviados com essas sujeiras e interpretados como valores verdadeiros
 
 ## [5.1.44] - 2022-01-24
 ### Correção
-
 - Corrige erro no endpoint findEvaluation quando não existe avaliadores cadastrados na oportunidade #1874
 - Evita que quem tenha permissão de edição na inscrição, veja o formulário de enviar prestação de contas #1871
 - Remove o status todas da lista de status da listagem de inscrições #1868
@@ -89,7 +364,6 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [5.1.43] - 2022-01-19
 ### Correção
-
 - Corrige erro de divisão por zero no módulo de relatórios
 
 ## [5.1.42] - 2022-01-14
@@ -118,10 +392,8 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Correções
 - Checa se metadado accountabilityPhase existe antes de exibir inscrições de prestação de contas no painel de controle
 - Altera forma de atuação do autosave das avaliações para evitar que registre avaliações dublicadas
-
 ### Novas LIB's php
 - Instala lib spreadsheet para geração de planilhas
-
 ### Melhorias
 - Melhora função createMailMessage para ser capaz de interpetrar mailer.bcc e mailer.replyTo
 
@@ -186,7 +458,6 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - coloca o template part da seleção de espaços para dentro do controller de oportunidade
 - refatora seleção de agentes e espaço na ficha de inscrição para ficarem dentro do controller de inscrição
 - melhoria no feedback de erro no formulário de inscrição
-
 ### Correções
 - Escapa valores do enum na procedure de exclusão de órfãos
 - Corrige mensagem de erro do botão enviar inscrição

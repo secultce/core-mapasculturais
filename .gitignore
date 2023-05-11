@@ -15,6 +15,7 @@ src/protected/application/themes/mapasculturais-*
 src/protected/vendor
 src/pub
 src/assets
+src/geojson
 src/protected/application/themes/Ceara
 compose/config.d/z.config.local.php
 *.log
@@ -30,3 +31,5 @@ documentation/site
 private-files
 docker-data
 scripts/nohup.out
+*node_modules*
+compose/local/config.d

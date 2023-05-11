@@ -213,6 +213,8 @@ trait EntityMetadata{
             if(!$def){
                 return null;
             }
+            
+            $default_value = $def->default_value;
 
             if(isset($this->__createdMetadata[$meta_key])){
                 $metadata_object = $this->__createdMetadata[$meta_key];
@@ -223,35 +225,50 @@ trait EntityMetadata{
                         $metadata_object = $_metadata_object;
                     }
                 }
+
+                if (is_null($metadata_object)) {
+                    $metadata_entity_class = $this->getMetadataClassName();
+
+                    $metadata_object = new $metadata_entity_class;
+                    $metadata_object->key = $meta_key;
+                    $metadata_object->owner = $this;
+                    
+                    if (isset($default_value)) {
+                        if($default_value instanceof \Closure) {
+                            $callable = \Closure::bind($default_value, $this);
+                            $metadata_object->value = $callable($def); 
+                        } else {
+                            $metadata_object->value = $default_value;
+                        }
+                    }
+        
+                    $this->__createdMetadata[$meta_key] = $metadata_object;
+                }
             }
 
             if($return_metadata_object){
-                $result = is_object($metadata_object) ? $metadata_object : null;
+                $result = $metadata_object;
             }else{
-                if (is_object($metadata_object)) {
-                    $result = $metadata_object->value; 
-                } else if ($def->default_value) {
-                    if(is_callable($def->default_value)) {
-                        $callable = \Closure::bind($def->default_value, $this);
+                $result = $metadata_object->value; 
+                
+                if (!isset($result) && isset($default_value)) {
+                    if($default_value instanceof \Closure) {
+                        $callable = \Closure::bind($default_value, $this);
                         $result = $callable($def); 
                     } else {
-                        $result = $def->default_value;
+                        $result = $default_value;
                     }
-                } else {
-                    $result = null;
                 }
             }
 
             return $result;
         }else{
             $result = [];
-            foreach (array_merge($this->__metadata->toArray(), $this->__createdMetadata) as $metadata_object){
-                if($return_metadata_object){
-                    $result[$metadata_object->key] = $metadata_object;
-                }else{
-                    $result[$metadata_object->key] = $metadata_object->value;
-                }
+            
+            foreach($this->getRegisteredMetadata(null, true) as $key => $def) {
+                $result[$key] = $this->getMetadata($key, $return_metadata_object);
             }
+
             return $result;
         }
     }
@@ -276,6 +293,11 @@ trait EntityMetadata{
      */
     function setMetadata($meta_key, $value){
     	$app = App::i();
+
+        if(is_string($value) && trim($value) === '') {
+            $value = null;
+        }
+
         $metadata_definition = $this->getRegisteredMetadata($meta_key);
         if (is_null($metadata_definition)) {
             $class = $this->getClassName();
@@ -283,7 +305,8 @@ trait EntityMetadata{
         }
 
         $metadata_entity_class = $this->getMetadataClassName();
-        $metadata_object = $app->repo($metadata_entity_class)->findOneBy(['owner' => $this, 'key' => $meta_key], ['id' => 'ASC']);        
+        $metadata_object =  $this->__createdMetadata[$meta_key] ?? 
+                            $app->repo($metadata_entity_class)->findOneBy(['owner' => $this, 'key' => $meta_key], ['id' => 'ASC']);        
 
         if(!$metadata_object){
             $metadata_object = new $metadata_entity_class;
@@ -293,9 +316,12 @@ trait EntityMetadata{
             $this->__createdMetadata[$meta_key] = $metadata_object;
         }
 
-        if($metadata_object->value != $value){
+        if($metadata_object->value !== $value){
             $this->__changedMetadata[$meta_key] = ['key'=> $meta_key, 'oldValue'=> $metadata_object->value, 'newValue'=> $value];
             $metadata_object->value = $value;
+            if (property_exists($this, 'updateTimestamp')) {
+                $this->updateTimestamp = new \DateTime;
+            }
         }
     }
 
@@ -320,7 +346,7 @@ trait EntityMetadata{
 
             $unserialize = $metadata_definition->unserialize;
             if (is_callable($unserialize)) {
-                $val = $unserialize($val);
+                $val = $unserialize($val, $this);
             }
 
             $metadata_value_errors = $metadata_definition->validate($this, $val);

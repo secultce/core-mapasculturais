@@ -119,7 +119,7 @@ trait EntityNested{
         $result = [];
         foreach($this->getChildren() as $child){
             $result[] = $child->id;
-            $result = array_merge($result, $child->getChildrenIds());
+            $result = array_merge($result, compact($child->getChildrenIds()));
         }
 
         return $result;

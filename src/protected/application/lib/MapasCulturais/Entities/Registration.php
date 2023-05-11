@@ -219,6 +219,7 @@ class Registration extends \MapasCulturais\Entity
     }
 
     function save($flush = false){
+        $this->cleanRegisteredFields();
         parent::save($flush);
     }
 
@@ -230,6 +231,21 @@ class Registration extends \MapasCulturais\Entity
         return App::i()->createUrl('registration', 'view', [$this->id]);
     }
 
+    function cleanRegisteredFields() {
+        $app = App::i();
+        $registered_metadata = $app->getRegisteredMetadata($this);
+
+        $fields = [];
+        foreach($this->opportunity->registrationFieldConfigurations as $field){
+            $fields[] = $field->getFieldName();
+        }
+
+        foreach($registered_metadata as $key => $metadada){
+            if(!in_array($key, $fields) && (strpos("field_", $key) === 0)){
+                $app->unregisterEntityMetadata(Registration::class, $key);
+            }
+        }
+    }
     
     function consolidateResult($flush = false, $caller = null){
         $app = App::i();
@@ -319,8 +335,51 @@ class Registration extends \MapasCulturais\Entity
         }else{
             $json = null;
         }
+        
+        if($this->canUser("viewUserEvaluation") && !$this->canUser("@control")){
+            $checkList = 'projectName,category,files,field,owner';
+            $values = ['files' => []];
 
-        return $json;
+            foreach($json as $k => $v){
+                $_k = preg_replace('/field_\d+/', 'field', $k);
+                
+                if(strpos($checkList, $_k) >= 0){
+
+                    if($k == "files"){
+                        foreach(array_keys($v) as $f){
+                            if($this->canSee($f)){
+                                $values[$k][$f] = $v[$f];
+                            }  
+                        }
+                       
+                    }else if($k == "owner" || $k == "agentRelations"){
+                        if($this->canSee("agentsSummary")){
+                            $values[$k] = $v;
+                        }
+                    }else{
+                        if($this->canSee($k) || $this->opportunity->canUser("@control")){
+                            $values[$k] = $v;
+                        }
+                    }
+                }else{
+                    $values[$k] = $v;
+                }
+            }
+        }else{
+            $values = $json;
+        }
+
+        return $values;
+    }
+
+    public function canSee($key)
+    {
+        $avaliableEvaluationFields = ($this->opportunity->avaliableEvaluationFields != "null") ? $this->opportunity->avaliableEvaluationFields : [];
+        if(in_array($key, array_keys($avaliableEvaluationFields))){
+            return true;
+        }
+
+        return false;
     }
 
     function getSpaceRelation(){ 
@@ -964,6 +1023,10 @@ class Registration extends \MapasCulturais\Entity
             return false;
         }
 
+        if(!in_array($this->opportunity->status, [-1,1])){
+            return false;
+        }
+
         if($this->opportunity->isUserAdmin($user)){
             return true;
         }
@@ -1018,9 +1081,15 @@ class Registration extends \MapasCulturais\Entity
     }
 
     protected function canUserSend($user){
+
         if($user->is('guest')){
             return false;
         }
+
+        if(!in_array($this->opportunity->status, [-1,1])){
+            return false;
+        }
+
 
         if($this->opportunity->isUserAdmin($user)){
             return true;

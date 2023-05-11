@@ -733,6 +733,8 @@ class Opportunity extends EntityController {
         $users = implode(',', array_map(function ($el){ return $el['user']; }, $committee));
 
         if(empty($users)){
+            $this->apiAddHeaderMetadata($this->data, [], 0);
+            $this->apiResponse([]);
             return;
         }
 
@@ -828,6 +830,15 @@ class Opportunity extends EntityController {
                 'registration' => $_registrations[$eval['registration_id']] ?? null,
                 'valuer' => $valuer_by_id[$eval['valuer_agent_id']] ?? null
             ];
+        }
+
+        if(!$opportunity->canUser("@control")){
+            $avaliableEvaluationFields = (!empty($opportunity->avaliableEvaluationFields) || $opportunity->avaliableEvaluationFields != "") ? $opportunity->avaliableEvaluationFields : [];
+            foreach($_result as $key => $res){
+                if(!in_array("agentsSummary", array_keys($avaliableEvaluationFields))){
+                    $_result[$key]['registration']['owner'] =  [];
+                }
+            }
         }
 
         if (!is_null($opportunity_id) && is_int($opportunity_id)) {

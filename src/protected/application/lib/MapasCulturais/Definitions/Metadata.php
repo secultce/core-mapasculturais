@@ -117,7 +117,7 @@ class Metadata extends \MapasCulturais\Definition{
     function __construct($key, $config) {
         $this->key = $key;
 
-        $this->default_value = key_exists('default_value', $config) ? $config['default_value'] : null;
+        $this->default_value = $config['default_value'] ?? $config['default'] ?? null;
 
         $this->label = $config['label'];
 
@@ -169,10 +169,16 @@ class Metadata extends \MapasCulturais\Definition{
 
     function getDefaultSerializer() {
         $serializers = [
+            'boolean' => function($value) {
+                if(is_null($value)) { return null; }
+                return $value ? '1' : '0';
+            },
             'json' => function($value) {
+                if(is_null($value)) { return null; }
                 return json_encode($value);
             },
             'DateTime' => function ($value) {
+                if(is_null($value)) { return null; }
                 if ($value instanceof DateTime) {
                     return $value->format('Y-m-d H:i:s');
                 } else if (is_string($value)) {
@@ -194,8 +200,23 @@ class Metadata extends \MapasCulturais\Definition{
 
     function getDefaultUnserializer() {
         $unserializers = [
+            'boolean' => function($value) {
+                return is_null($value) ? null : (bool) $value;
+            },
+            'integer' => function($value) {
+                return is_null($value) ? null : (int) $value;
+            },
+            'int' => function($value) {
+                return is_null($value) ? null : (int) $value;
+            },
+            'numeric' => function($value) {
+                return is_null($value) ? null : (float) $value;
+            },
+            'number' => function($value) {
+                return is_null($value) ? null : (float) $value;
+            },
             'json' => function($value) {
-                return json_decode($value);
+                return is_null($value) ? null : json_decode($value);
             },
             'DateTime' => function($value) {
                 if ($value) {
@@ -222,24 +243,28 @@ class Metadata extends \MapasCulturais\Definition{
      *
      * @return bool|array true if the value is valid or an array of errors
      */
-    function validate(\MapasCulturais\Entity $owner, $value){
+    function validate(\MapasCulturais\Entity $entity, $value){
         $errors = [];
 
-        if($this->is_required && !$value){
+        if($this->is_required && is_null($value)){
             $errors[] = $this->is_required_error_message;
 
         }elseif($value){
             foreach($this->_validations as $validation => $message){
                 $ok = true;
-                $validation = str_replace('v::', 'MapasCulturais\Validator::', $validation);
 
-                eval('$ok = ' . $validation . '->validate($value);');
+                if(strpos($validation,'v::') === 0){
+                    $validation = str_replace('v::', 'MapasCulturais\Validator::', $validation);
+                    eval('$ok = ' . $validation . '->validate($value);');
+                }else{
+                    eval('$ok = ' . $validation . ';');
+                }
 
                 if(!$ok)
                     $errors[] = $message;
             }
 
-            if(!$errors && $this->is_unique && !$this->validateUniqueValue($owner, $value))
+            if(!$errors && $this->is_unique && !$this->validateUniqueValue($entity, $value))
                 $errors[] = $this->is_unique_error_message;
 
         }
@@ -263,9 +288,15 @@ class Metadata extends \MapasCulturais\Definition{
 
 
         if(class_exists($owner_class . 'Meta')){
-            $q = $app->em->createQuery("SELECT COUNT(m) FROM {$owner_class}Meta m WHERE m.key = :key AND m.value = :value AND m.owner != :owner");
-
-            $q->setParameters(['key' => $this->key, 'value' => $value, 'owner' => $owner]);
+            if ($owner->isNew()) {
+                $q = $app->em->createQuery("SELECT COUNT(m) FROM {$owner_class}Meta m WHERE m.key = :key AND m.value = :value");
+    
+                $q->setParameters(['key' => $this->key, 'value' => $value]);
+            } else {
+                $q = $app->em->createQuery("SELECT COUNT(m) FROM {$owner_class}Meta m WHERE m.key = :key AND m.value = :value AND m.owner != :owner");
+    
+                $q->setParameters(['key' => $this->key, 'value' => $value, 'owner' => $owner]);
+            }
 
         }else{
             $q = $app->em->createQuery("SELECT COUNT(m) FROM \MapasCulturais\Entities\Metadata m WHERE m.key = :key AND m.value = :value AND m.ownerType :ownerType AND m.ownerId != :ownerId");

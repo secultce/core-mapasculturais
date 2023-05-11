@@ -283,8 +283,7 @@ abstract class Entity implements \JsonSerializable{
     function setStatus(int $status){
         $app = App::i();
 
-        
-        if($status != $this->status){
+        if($status != $this->status){           
             
             switch($status){
                 case self::STATUS_ARCHIVED:
@@ -794,6 +793,15 @@ abstract class Entity implements \JsonSerializable{
             $e = new Exceptions\WorkflowRequest($requests);
             throw $e;
         }
+
+        if ($is_new) {
+            $app->applyHookBoundTo($this, "{$hook_prefix}.insert:finish");
+        } else {
+            $app->applyHookBoundTo($this, "{$hook_prefix}.update:finish");
+        }
+
+        $app->applyHookBoundTo($this, "{$hook_prefix}.save:finish");
+        
     }
 
     /**

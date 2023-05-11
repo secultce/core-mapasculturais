@@ -224,6 +224,39 @@ class Module extends \MapasCulturais\Module{
             }
         });
 
+        $app->hook('entity(Opportunity).get(previousPhase)', function(&$value) use ($app) {
+            $query = $app->em->createQuery("SELECT o FROM MapasCulturais\\Entities\\Opportunity o WHERE o.parent = :parent AND o.registrationFrom < :rfrom ORDER BY o.registrationFrom DESC");
+
+            $query->setParameters([
+                "parent" => $this->firstPhase,
+                "rfrom" => $this->registrationFrom,
+            ]);
+
+            $value = $query->getOneOrNullResult();
+        });
+
+        $app->hook('entity(Opportunity).get(previousPhases)', function(&$value) use ($app) {
+            $query = $app->em->createQuery("SELECT o FROM MapasCulturais\\Entities\\Opportunity o WHERE (o.parent = :parent AND o.registrationFrom < :rfrom) OR o.id = :parent ORDER BY o.registrationFrom ASC");
+
+            $query->setParameters([
+                "parent" => $this->firstPhase,
+                "rfrom" => $this->registrationFrom,
+            ]);
+
+            $value = $query->getResult();
+        });
+
+        $app->hook('entity(Opportunity).get(nextPhase)', function(&$value) use ($app) {
+            $query = $app->em->createQuery("SELECT o FROM MapasCulturais\\Entities\\Opportunity o WHERE o.parent = :parent AND o.registrationFrom > :rfrom ORDER BY o.registrationFrom ASC");
+
+            $query->setParameters([
+                "parent" => $this->firstPhase,
+                "rfrom" => $this->registrationFrom,
+            ]);
+
+            $value = $query->getOneOrNullResult();
+        });
+
         $app->hook('entity(Opportunity).get(lastCreatedPhase)', function(&$value) {
             $first_phase = $this->firstPhase;
             $value = Module::getLastCreatedPhase($first_phase);
@@ -257,6 +290,21 @@ class Module extends \MapasCulturais\Module{
             }
         });
 
+        $app->hook('entity(Registration).get(<<projectName|field_*>>)', function(&$value, $field_name) use($app) {
+            /** @var Entities\Registration $this */
+
+            if(!$this->canUser('viewPrivateData')) {
+                return;
+            }
+            if(empty($value) && ($previous_phase = $this->previousPhase)){
+                $previous_phase->registerFieldsMetadata();
+
+                $app->disableAccessControl();
+                $value = $previous_phase->$field_name;
+                $app->enableAccessControl();
+            }
+        });
+
         $app->hook('entity(Registration).get(firstPhase)', function(&$value) use($registration_repository) {
             $opportunity = $this->opportunity;
 
@@ -264,28 +312,10 @@ class Module extends \MapasCulturais\Module{
 
         });
 
-        $app->hook('entity(Registration).get(<<projectName|field_*>>)', function(&$value, $metadata_key) use($app) {
-            if(!$value && $this->previousPhase) {
-                $this->previousPhase->registerFieldsMetadata();
-
-                $cache_id = "registration:{$this->number}:$metadata_key";
-                if($app->cache->contains($cache_id)) {
-                    $value = $app->cache->fetch($cache_id);
-                } else {
-                    $value = $this->previousPhase->$metadata_key;
-                    $app->cache->save($cache_id, $value, DAY_IN_SECONDS);
-                }
-            }
-        });
-
-
-        $app->hook('entity(registration).meta(<<projectName|field_*>>).update:after', function() use($app) {
-            $cache_id = "registration:{$this->owner->number}:{$this->key}";
-            $app->cache->delete($cache_id);
-        });
-
         // registra os metadados das inscrićões das fases anteriores
-        $app->hook('<<GET|POST|PUT|PATCH|DELETE>>(registration.<<*>>):before', function() {
+        $app->hook('GET(registration.<<*>>):before', function() {
+            /** @var \MapasCulturais\Controllers\Registration $this */
+            
             $registration = $this->getRequestedEntity();
 
 
@@ -333,6 +363,30 @@ class Module extends \MapasCulturais\Module{
         $app->hook('template(panel.<<*>>.panel-registration-title):end', function ($registration) {
             if ($registration->opportunity->isOpportunityPhase) {
                 $this->part('opportunity-phase-base-name', ['entity' => $registration->opportunity]);
+            }
+        });
+
+        $app->hook('GET(opportunity.edit):before', function() use ($app){
+            $entity = $this->requestedEntity;
+         
+            if($entity->canUser('@control')){
+                $previous_phases = $entity->previousPhases;
+
+                if($entity->firstPhase->id != $entity->id){
+                    $previous_phases[] = $entity;
+                }
+    
+                foreach($previous_phases as $phase)
+                {
+                    foreach($phase->registrationFieldConfigurations as $field){
+                        $app->view->jsObject['evaluationFieldsList'][] = $field;
+                    }
+
+                    foreach($phase->registrationFileConfigurations as $file){
+                        $app->view->jsObject['evaluationFieldsList'][] = $file;
+                    }
+                }
+
             }
         });
 
@@ -397,8 +451,16 @@ class Module extends \MapasCulturais\Module{
                     $this->jsObject['entity']['registrationFieldConfigurations'][] = $field;
 
                     $field_name = $field->fieldName;
+                    
+                    if($reg->canUser("viewUserEvaluation") && !$reg->canUser("@control")){
+                        if(isset($opportunity->avaliableEvaluationFields[$field_name])){
+                            $this->jsObject['entity']['object']->$field_name = $reg->$field_name;
+                        }
+                    }else{
+                        $this->jsObject['entity']['object']->$field_name = $reg->$field_name;
+                    }
 
-                    $this->jsObject['entity']['object']->$field_name = $reg->$field_name;
+
                 }
 
                 foreach($opportunity->registrationFileConfigurations as $file){
