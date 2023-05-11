@@ -113,7 +113,7 @@ $child_entity_request = isset($child_entity_request) ? $child_entity_request : n
     
     <?php if($this->controller->action == 'create'): ?>
         <div class="widget">
-            <p class="alert info"><?php \MapasCulturais\i::_e("Para adicionar arquivos para download ou links, primeiro Ã© preciso salvar o projeto");?>.<span class="close"></span></p>
+            <p class="alert info"><?php \MapasCulturais\i::_e("Para adicionar arquivos para download ou links, primeiro é preciso salvar o projeto");?>.<span class="close"></span></p>
         </div>
     <?php endif; ?>
 
