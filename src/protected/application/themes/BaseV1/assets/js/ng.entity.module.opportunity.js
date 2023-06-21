@@ -335,8 +335,6 @@ module.controller('RegistrationConfigurationsController', ['$scope', '$rootScope
         title: null,
         description: null,
         maxSize: null,
-        mask: null,
-        maskOptions: null,
         required: false,
         categories: []
     };
@@ -535,8 +533,6 @@ module.controller('RegistrationConfigurationsController', ['$scope', '$rootScope
                 config: model.config,
                 description: model.description,
                 maxSize: model.maxSize,
-                mask: model.mask,
-                maskOptions: model.maskOptions,
                 required: model.required,
                 categories: model.categories.length ? model.categories : '',
 
