@@ -150,6 +150,7 @@
                 "phpunit/phpunit": "<5.0",
                 "satooshi/php-coveralls": "~1.0"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-0": {
@@ -233,6 +234,10 @@
                 "string",
                 "text"
             ],
+            "support": {
+                "issues": "https://github.com/creof/geo-parser/issues",
+                "source": "https://github.com/creof/geo-parser/tree/master"
+            },
             "time": "2019-08-07T17:45:01+00:00"
         },
         {
@@ -285,6 +290,10 @@
                 "text",
                 "wkb"
             ],
+            "support": {
+                "issues": "https://github.com/creof/wkb-parser/issues",
+                "source": "https://github.com/creof/wkb-parser/tree/master"
+            },
             "time": "2016-05-22T22:47:16+00:00"
         },
         {
@@ -338,6 +347,10 @@
                 "text",
                 "wkt"
             ],
+            "support": {
+                "issues": "https://github.com/creof/wkt-parser/issues",
+                "source": "https://github.com/creof/wkt-parser/tree/master"
+            },
             "time": "2016-05-03T16:15:16+00:00"
         },
         {
@@ -392,6 +405,10 @@
                 "curl",
                 "dot"
             ],
+            "support": {
+                "issues": "https://github.com/php-mod/curl/issues",
+                "source": "https://github.com/php-mod/curl/tree/master"
+            },
             "time": "2014-12-11T16:11:01+00:00"
         },
         {
@@ -425,6 +442,10 @@
                 "MIT"
             ],
             "description": "implementation of xdg base directory specification for php",
+            "support": {
+                "issues": "https://github.com/dnoegel/php-xdg-base-dir/issues",
+                "source": "https://github.com/dnoegel/php-xdg-base-dir/tree/v0.1.1"
+            },
             "time": "2019-12-04T15:06:13+00:00"
         },
         {
@@ -573,6 +594,10 @@
                 "redis",
                 "xcache"
             ],
+            "support": {
+                "issues": "https://github.com/doctrine/cache/issues",
+                "source": "https://github.com/doctrine/cache/tree/1.10.x"
+            },
             "funding": [
                 {
                     "url": "https://www.doctrine-project.org/sponsorship.html",
@@ -652,6 +677,10 @@
                 "iterators",
                 "php"
             ],
+            "support": {
+                "issues": "https://github.com/doctrine/collections/issues",
+                "source": "https://github.com/doctrine/collections/tree/1.6.7"
+            },
             "time": "2020-07-27T17:53:49+00:00"
         },
         {
@@ -723,6 +752,10 @@
                 "doctrine",
                 "php"
             ],
+            "support": {
+                "issues": "https://github.com/doctrine/common/issues",
+                "source": "https://github.com/doctrine/common/tree/3.1.1"
+            },
             "funding": [
                 {
                     "url": "https://www.doctrine-project.org/sponsorship.html",
@@ -832,6 +865,10 @@
                 "sqlserver",
                 "sqlsrv"
             ],
+            "support": {
+                "issues": "https://github.com/doctrine/dbal/issues",
+                "source": "https://github.com/doctrine/dbal/tree/2.10.4"
+            },
             "funding": [
                 {
                     "url": "https://www.doctrine-project.org/sponsorship.html",
@@ -922,6 +959,10 @@
                 "event system",
                 "events"
             ],
+            "support": {
+                "issues": "https://github.com/doctrine/event-manager/issues",
+                "source": "https://github.com/doctrine/event-manager/tree/1.1.x"
+            },
             "funding": [
                 {
                     "url": "https://www.doctrine-project.org/sponsorship.html",
@@ -1013,6 +1054,10 @@
                 "uppercase",
                 "words"
             ],
+            "support": {
+                "issues": "https://github.com/doctrine/inflector/issues",
+                "source": "https://github.com/doctrine/inflector/tree/2.0.x"
+            },
             "funding": [
                 {
                     "url": "https://www.doctrine-project.org/sponsorship.html",
@@ -1078,6 +1123,10 @@
                 "constructor",
                 "instantiate"
             ],
+            "support": {
+                "issues": "https://github.com/doctrine/instantiator/issues",
+                "source": "https://github.com/doctrine/instantiator/tree/1.4.0"
+            },
             "funding": [
                 {
                     "url": "https://www.doctrine-project.org/sponsorship.html",
@@ -1154,6 +1203,10 @@
                 "parser",
                 "php"
             ],
+            "support": {
+                "issues": "https://github.com/doctrine/lexer/issues",
+                "source": "https://github.com/doctrine/lexer/tree/1.2.1"
+            },
             "funding": [
                 {
                     "url": "https://www.doctrine-project.org/sponsorship.html",
@@ -1800,6 +1853,10 @@
             "keywords": [
                 "markdown"
             ],
+            "support": {
+                "issues": "https://github.com/michelf/php-markdown/issues",
+                "source": "https://github.com/michelf/php-markdown/tree/1.9.0"
+            },
             "time": "2019-12-02T02:32:27+00:00"
         },
         {
@@ -1894,6 +1951,10 @@
                 "object",
                 "object graph"
             ],
+            "support": {
+                "issues": "https://github.com/myclabs/DeepCopy/issues",
+                "source": "https://github.com/myclabs/DeepCopy/tree/1.10.2"
+            },
             "funding": [
                 {
                     "url": "https://tidelift.com/funding/github/packagist/myclabs/deep-copy",
@@ -2097,6 +2158,10 @@
                 "omniauth",
                 "twitter"
             ],
+            "support": {
+                "issues": "https://github.com/opauth/opauth/issues",
+                "source": "https://github.com/opauth/opauth/tree/master"
+            },
             "time": "2018-02-25T03:18:21+00:00"
         },
         {
@@ -2141,6 +2206,10 @@
                 "OpenId",
                 "auth"
             ],
+            "support": {
+                "issues": "https://github.com/opauth/openid/issues",
+                "source": "https://github.com/opauth/openid/tree/0.1.0"
+            },
             "time": "2012-06-08T07:00:03+00:00"
         },
         {
@@ -2178,6 +2247,10 @@
                 "php",
                 "zip"
             ],
+            "support": {
+                "issues": "https://github.com/ivanlanin/pclzip/issues",
+                "source": "https://github.com/ivanlanin/pclzip/tree/master"
+            },
             "time": "2014-06-05T11:42:24+00:00"
         },
         {
@@ -2330,6 +2403,10 @@
                 "reflection",
                 "static analysis"
             ],
+            "support": {
+                "issues": "https://github.com/phpDocumentor/ReflectionCommon/issues",
+                "source": "https://github.com/phpDocumentor/ReflectionCommon/tree/2.x"
+            },
             "time": "2020-06-27T09:03:43+00:00"
         },
         {
@@ -2482,6 +2559,10 @@
                 "office",
                 "php"
             ],
+            "support": {
+                "issues": "https://github.com/PHPOffice/Common/issues",
+                "source": "https://github.com/PHPOffice/Common/tree/master"
+            },
             "time": "2018-07-13T14:12:34+00:00"
         },
         {
@@ -2682,6 +2763,10 @@
                 "word",
                 "writer"
             ],
+            "support": {
+                "issues": "https://github.com/PHPOffice/PHPWord/issues",
+                "source": "https://github.com/PHPOffice/PHPWord/tree/develop"
+            },
             "time": "2016-07-31T08:53:39+00:00"
         },
         {
@@ -2911,6 +2996,10 @@
             "keywords": [
                 "template"
             ],
+            "support": {
+                "issues": "https://github.com/sebastianbergmann/php-text-template/issues",
+                "source": "https://github.com/sebastianbergmann/php-text-template/tree/1.2.1"
+            },
             "time": "2015-06-21T13:50:34+00:00"
         },
         {
@@ -3105,6 +3194,10 @@
                 "testing",
                 "xunit"
             ],
+            "support": {
+                "issues": "https://github.com/sebastianbergmann/phpunit/issues",
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/8.5.15"
+            },
             "funding": [
                 {
                     "url": "https://phpunit.de/donate.html",
@@ -3169,6 +3262,10 @@
                 "localization",
                 "translation"
             ],
+            "support": {
+                "issues": "https://github.com/LeoColomb/pomo/issues",
+                "source": "https://github.com/LeoColomb/pomo/tree/master"
+            },
             "time": "2018-12-20T14:55:38+00:00"
         },
         {
@@ -3331,14 +3428,9 @@
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.3.0"
+                "php": ">=7.2.0"
             },
             "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "1.0.x-dev"
-                }
-            },
             "autoload": {
                 "psr-4": {
                     "Psr\\Http\\Message\\": "src/"
@@ -3351,7 +3443,7 @@
             "authors": [
                 {
                     "name": "PHP-FIG",
-                    "homepage": "http://www.php-fig.org/"
+                    "homepage": "https://www.php-fig.org/"
                 }
             ],
             "description": "Common interface for HTTP messages",
@@ -3547,6 +3639,10 @@
                 "validation",
                 "validator"
             ],
+            "support": {
+                "issues": "https://github.com/Respect/Validation/issues",
+                "source": "https://github.com/Respect/Validation/tree/1.1.31"
+            },
             "time": "2019-05-28T06:10:06+00:00"
         },
         {
@@ -4228,6 +4324,10 @@
             ],
             "description": "Library that helps with managing the version number of Git-hosted PHP projects",
             "homepage": "https://github.com/sebastianbergmann/version",
+            "support": {
+                "issues": "https://github.com/sebastianbergmann/version/issues",
+                "source": "https://github.com/sebastianbergmann/version/tree/master"
+            },
             "time": "2016-10-03T07:35:21+00:00"
         },
         {
@@ -4418,6 +4518,10 @@
                 "rest",
                 "router"
             ],
+            "support": {
+                "issues": "https://github.com/slimphp/Slim/issues",
+                "source": "https://github.com/slimphp/Slim/tree/2.x"
+            },
             "time": "2017-01-07T12:21:41+00:00"
         },
         {
@@ -4450,6 +4554,10 @@
             ],
             "description": "An open-source PHP library for image manipulation. (With namespaces, PHP 5.3+)",
             "homepage": "http://wideimage.sourceforge.net",
+            "support": {
+                "issues": "https://github.com/smottt/WideImage/issues",
+                "source": "https://github.com/smottt/WideImage/tree/v1.1.1"
+            },
             "time": "2015-10-05T20:32:34+00:00"
         },
         {
@@ -4649,6 +4757,9 @@
             ],
             "description": "A generic function and convention to trigger deprecation notices",
             "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/deprecation-contracts/tree/master"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -4725,6 +4836,9 @@
                 "polyfill",
                 "portable"
             ],
+            "support": {
+                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.22.1"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -4803,6 +4917,9 @@
                 "portable",
                 "shim"
             ],
+            "support": {
+                "source": "https://github.com/symfony/polyfill-intl-grapheme/tree/v1.22.1"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -4884,6 +5001,9 @@
                 "portable",
                 "shim"
             ],
+            "support": {
+                "source": "https://github.com/symfony/polyfill-intl-normalizer/tree/v1.22.1"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -4961,6 +5081,9 @@
                 "portable",
                 "shim"
             ],
+            "support": {
+                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.22.1"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -5037,6 +5160,9 @@
                 "portable",
                 "shim"
             ],
+            "support": {
+                "source": "https://github.com/symfony/polyfill-php73/tree/v1.22.1"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -5117,6 +5243,9 @@
                 "portable",
                 "shim"
             ],
+            "support": {
+                "source": "https://github.com/symfony/polyfill-php80/tree/v1.22.1"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -5193,6 +5322,9 @@
                 "interoperability",
                 "standards"
             ],
+            "support": {
+                "source": "https://github.com/symfony/service-contracts/tree/master"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -5273,6 +5405,9 @@
                 "utf-8",
                 "utf8"
             ],
+            "support": {
+                "source": "https://github.com/symfony/string/tree/v5.2.4"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -5358,6 +5493,9 @@
                 "debug",
                 "dump"
             ],
+            "support": {
+                "source": "https://github.com/symfony/var-dumper/tree/v5.2.5"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -5430,6 +5568,9 @@
             ],
             "description": "Loads and dumps YAML files",
             "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/yaml/tree/v5.2.5"
+            },
             "funding": [
                 {
                     "url": "https://symfony.com/sponsor",
@@ -5484,6 +5625,10 @@
                 }
             ],
             "description": "A small library for converting tokenized PHP source code into XML and potentially other formats",
+            "support": {
+                "issues": "https://github.com/theseer/tokenizer/issues",
+                "source": "https://github.com/theseer/tokenizer/tree/master"
+            },
             "funding": [
                 {
                     "url": "https://github.com/theseer",
@@ -5589,6 +5734,10 @@
                 "escaper",
                 "zf2"
             ],
+            "support": {
+                "issues": "https://github.com/zendframework/zend-escaper/issues",
+                "source": "https://github.com/zendframework/zend-escaper/tree/release-2.4.2"
+            },
             "abandoned": "laminas/laminas-escaper",
             "time": "2015-05-07T14:55:31+00:00"
         },
@@ -5645,6 +5794,10 @@
                 "stdlib",
                 "zf2"
             ],
+            "support": {
+                "issues": "https://github.com/zendframework/zend-stdlib/issues",
+                "source": "https://github.com/zendframework/zend-stdlib/tree/release-2.4.4"
+            },
             "abandoned": "laminas/laminas-stdlib",
             "time": "2015-07-21T13:55:46+00:00"
         },
@@ -5711,6 +5864,10 @@
                 "validator",
                 "zf2"
             ],
+            "support": {
+                "issues": "https://github.com/zendframework/zend-validator/issues",
+                "source": "https://github.com/zendframework/zend-validator/tree/release-2.4.8"
+            },
             "abandoned": "laminas/laminas-validator",
             "time": "2015-09-08T21:04:17+00:00"
         }
@@ -5729,5 +5886,5 @@
         "php": ">=7.2"
     },
     "platform-dev": [],
-    "plugin-api-version": "1.1.0"
+    "plugin-api-version": "2.0.0"
 }
