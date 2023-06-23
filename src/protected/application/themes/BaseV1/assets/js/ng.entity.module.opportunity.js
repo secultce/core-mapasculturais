@@ -384,7 +384,7 @@ module.controller('RegistrationConfigurationsController', ['$scope', '$rootScope
 
                 var url = new UrlService('opportunity');
                 var saveOrderUrl = url.create('saveFieldsOrder', MapasCulturais.entity.id);
-                // requisi��o para salvar ordem
+                // requisição para salvar ordem
                 $http.post(saveOrderUrl, {fields: _fields}).success(function(){
                     MapasCulturais.Messages.success(labels['changesSaved']);
                 });
@@ -878,7 +878,7 @@ module.controller('EvaluationsFieldsConfigController', ['$scope', 'EvaluationsFi
         spaceSummary:{
             fieldName: "spaceSummary",
             checked: false,
-            title: "Resumo dos espa�os"
+            title: "Resumo dos espaços"
         },
         allFields: {
             checked:false
@@ -893,7 +893,7 @@ module.controller('EvaluationsFieldsConfigController', ['$scope', 'EvaluationsFi
         $scope.dependenceVeriry(field);
 
         if(field.ref == "category" && !field.checked){
-            MapasCulturais.Messages.alert("Voc� desativou a categoria, todos os campos vinculado a alguma categoria ser�o tamb�m desativados");
+            MapasCulturais.Messages.alert("Você desativou a categoria, todos os campos vinculado a alguma categoria serão também desativados");
         }
 
         $scope.data.fields.forEach(function(item){
@@ -938,14 +938,14 @@ module.controller('EvaluationsFieldsConfigController', ['$scope', 'EvaluationsFi
 
         if(MapasCulturais.entity.object.avaliableEvaluationFields["category"] != "true" && item.categories?.length > 0){
             item.disabled = true;
-            item.titleDisabled = "Para ativar este campo, ative tamb�m o campo Categoria";
+            item.titleDisabled = "Para ativar este campo, ative também o campo Categoria";
             
         }
 
         var field_condition = item.config?.require?.field;
         if(field_condition && MapasCulturais.entity.object.avaliableEvaluationFields[field_condition] != "true"){
             item.disabled = true;
-            item.titleDisabled = "Para ativar este campo, ative tamb�m o campo '"+$scope.fieldTitles[field_condition]+"'";
+            item.titleDisabled = "Para ativar este campo, ative também o campo '"+$scope.fieldTitles[field_condition]+"'";
         }
     });
 
@@ -1003,7 +1003,7 @@ module.controller('EvaluationsFieldsConfigController', ['$scope', 'EvaluationsFi
 
         EvaluationsFieldsConfigService.save($scope.data.avaliableEvaluationFields).success(function(r) {
             if($scope.hasDisabled && $scope.data.allFields.checked){
-                MapasCulturais.Messages.alert("Aten��o, voc� tentou marcar campos que est�o debilitados por algum tipo de condicional ou vinculado a alguma categoria, verifique se todos foram que deseja marcar foram marcados corretamente");            
+                MapasCulturais.Messages.alert("Atenção, você tentou marcar campos que estão debilitados por algum tipo de condicional ou vinculado a alguma categoria, verifique se todos foram que deseja marcar foram marcados corretamente");            
             }else{
                 MapasCulturais.Messages.success("Salvo com sucesso");            
             }
@@ -1136,7 +1136,7 @@ module.controller('RegistrationFieldsController', ['$scope', '$rootScope', '$int
         }, MapasCulturais.registrationAutosaveTimeout);
     }
 
-    // modifica o bot�o salvar
+    // modifica o botão salvar
     if(MapasCulturais.isEditable){
         $('#editable-entity .js-submit-button').remove();
         $('#editable-entity .controles').html('<a class="btn btn-default js-validade-registration" rel="noopener noreferrer">Validar inscrição</a> <a class="btn btn-primary js-save-registration" rel="noopener noreferrer">Salvar</a>');
@@ -1234,7 +1234,7 @@ module.controller('RegistrationFieldsController', ['$scope', '$rootScope', '$int
             group = attrs.name,
             spaceId = entity.id;
 
-        //retira msg de erro do espa�o vinculado, caso haja
+        //retira msg de erro do espaço vinculado, caso haja
         if($('#registration-space-title :first-child').hasClass('danger')){
             $('#registration-space-title :first-child').remove();
         }
@@ -1271,7 +1271,7 @@ module.controller('RegistrationFieldsController', ['$scope', '$rootScope', '$int
             group = attrs.name,
             spaceId = registrationEntity.space.id;
 
-        //retira msg de erro do espa�o vinculado, caso haja
+        //retira msg de erro do espaço vinculado, caso haja
         if($('#registration-space-title :first-child').hasClass('danger')){
             $('#registration-space-title :first-child').remove();
         }
@@ -1350,17 +1350,6 @@ module.controller('RegistrationFieldsController', ['$scope', '$rootScope', '$int
     $scope.sendRegistration = function(redirectUrl = false, isAccountability = false){
         $timeout.cancel(saveTimeout); 
 
-        req.error(function(){
-            $scope.scrollToError();
-        });
-        
-        req.success(function () { 
-            // TODO: i18n
-            if(isAccountability){
-                if(!confirm('Ao enviar a presta��o de contas, n�o ser� mais permitido editar os campos. tem certeza que deseja continuar?')){
-                    return;
-                }                    
-            }
         $scope.saveRegistration().success(function(){
             var req = $scope.validateRegistration();
 
@@ -1414,9 +1403,6 @@ module.controller('RegistrationFieldsController', ['$scope', '$rootScope', '$int
                             document.location = response.redirect || response.singleUrl;
                         } 
                     }
-
-                    $('#registration-btn-send').show();
-                    $('#registration-form-loading').hide();
                 });
             });  
         })
@@ -2048,14 +2034,14 @@ module.controller('OpportunityController', ['$scope', '$rootScope', '$location',
 
         if ($scope.numberOfEnabledColumns() == 0) {
             object[key] = true;
-            alert('N�o � permitido desabilitar todas as colunas da tabela');
+            alert('Não é permitido desabilitar todas as colunas da tabela');
             return;
         }
 
         if (key == 'number' ) {
             var columnObj = $scope.getColumnByKey(key);
             object[key] = true;
-            alert('N�o � permitido desabilitar a coluna ' + columnObj.title);
+            alert('Não é permitido desabilitar a coluna ' + columnObj.title);
             return;
         }
 
@@ -2173,11 +2159,11 @@ module.controller('OpportunityController', ['$scope', '$rootScope', '$location',
 
 
     var defaultSelectFields = [
-        {fieldName: "number", title:labels["Inscri��o"] ,required:true},
+        {fieldName: "number", title:labels["Inscrição"] ,required:true},
         {fieldName: "category", title:labels['Categorias'] ,required:true},
         {fieldName: "agents", title:labels['Agentes'] ,required:true},
         {fieldName: "attachments", title:labels['Anexos']  ,required:true},
-        {fieldName: "evaluation", title: labels['Avalia��o'] ,required:true},
+        {fieldName: "evaluation", title: labels['Avaliação'] ,required:true},
         {fieldName: "status", title:labels['Status'] ,required:true},
     ];
 
@@ -2350,7 +2336,7 @@ module.controller('OpportunityController', ['$scope', '$rootScope', '$location',
         });
     }
 
-    //labels espa�os vinculados
+    //labels espaços vinculados
     for(var name in MapasCulturais.labels.space){
         var label = MapasCulturais.labels.space[name];
         $scope.data.spaceLabels.push({
