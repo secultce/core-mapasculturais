@@ -397,11 +397,7 @@ class Controller extends \MapasCulturais\Controller
                //Validação das linguagens
                $languages = explode(';', $value['LANGUAGE']);
                if (!$languages) {
-                  $errors[$key+1][] = i::__("A coluna linguagem está vazia");
                }
-
-               //Tratamento da lista
-               $languages_list = $app->getRegisteredTaxonomyBySlug('linguagem')->restrictedTerms;
 
                foreach ($languages as $language) {
                   $_language = $this->lowerStr($language);
@@ -542,7 +538,6 @@ class Controller extends \MapasCulturais\Controller
          $this->render("import-erros", ["errors" => $errors, 'filename' => basename($file_dir)]);
          exit;
       }
-
       $countNewEvent = 0;
       $eventsIdList = [];
       $error_process = false;
