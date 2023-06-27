@@ -110,7 +110,7 @@ if($this->controller->action === 'create')
         </p>
         <p>
             <label>
-                <input id="only_owner" type='checkbox' ng-model="data.only_owner" name="only_owner">
+                <input id="only_owner" type='checkbox' ng-model="data.only_owner" name="only_owner" ng-checked="true">
                 <?php i::_e("Enviar somente para o Responsável");?>
             </label>
         </p>
